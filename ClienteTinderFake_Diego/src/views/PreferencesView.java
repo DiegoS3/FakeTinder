@@ -10,6 +10,8 @@ import comunicacion.Comunicacion;
 import constantes.ConstantesPreferencias;
 import datos.Preferencia;
 import datos.Usuario;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.net.Socket;
 import java.security.InvalidKeyException;
@@ -22,6 +24,8 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SealedObject;
 import javax.swing.ButtonGroup;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import seguridad.Seguridad;
 import utilities.Utilities;
@@ -58,6 +62,7 @@ public class PreferencesView extends javax.swing.JFrame {
     private void init() {
         crearButtonGroups();
         mostrarPrefs();
+
     }
 
     private void crearButtonGroups() {
@@ -112,6 +117,14 @@ public class PreferencesView extends javax.swing.JFrame {
         jLabel12 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosed(java.awt.event.WindowEvent evt) {
+                formWindowClosed(evt);
+            }
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -395,6 +408,7 @@ public class PreferencesView extends javax.swing.JFrame {
     private void btnCreatePrefsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCreatePrefsActionPerformed
         try {
             if (comprobarForm()) {
+                Utilities.enviarOrden(CodeResponse.CONTINUAR_CODE, clavePubAjena, servidor);
                 Preferencia nP = crearPrefs();
                 //Ciframos y enviamos preferencias
                 SealedObject so = Seguridad.cifrar(clavePubAjena, nP);
@@ -409,11 +423,27 @@ public class PreferencesView extends javax.swing.JFrame {
                     Utilities.enviarOrden(CodeResponse.PREFS_CREAR_CODE, clavePubAjena, servidor);
                     correcto(nP);
                 }
+                this.prefsUser = nP;
             }
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IOException | IllegalBlockSizeException ex) {
             Logger.getLogger(PreferencesView.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_btnCreatePrefsActionPerformed
+
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        // TODO add your handling code here:
+        MainView main = new MainView(servidor, clavePrivPropia, clavePubAjena, userLogeado, this.prefsUser);
+        main.setVisible(true);
+        //this.dispose();
+        Utilities.enviarOrden(CodeResponse.SALIR_CODE, clavePubAjena, servidor);
+        //dialog.setVisible(true);
+    }//GEN-LAST:event_formWindowClosing
+
+    private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
+        // TODO add your handling code here:
+        //Utilities.enviarOrden(CodeResponse.SALIR_CODE, clavePubAjena, servidor);
+    }//GEN-LAST:event_formWindowClosed
 
     private void correcto(Preferencia nP) {
         short res = Utilities.recibirOrden(servidor, clavePrivPropia);

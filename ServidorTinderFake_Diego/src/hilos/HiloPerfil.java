@@ -1,4 +1,3 @@
-
 package hilos;
 
 import bbdd.ControladorPerfil;
@@ -24,8 +23,8 @@ import utilities.Utilities;
  *
  * @author Diego
  */
-public class HiloPerfil extends Thread{
-    
+public class HiloPerfil extends Thread {
+
     private Socket cliente;
     private PublicKey clavePubAjena;
     private PrivateKey clavePrivPropia;
@@ -39,31 +38,38 @@ public class HiloPerfil extends Thread{
 
     @Override
     public void run() {
-        
+
         System.out.println("ME INICIO HILO PERFIL");
-        try {
-            //Recibo el id del usuario
-            SealedObject so = (SealedObject) Comunicacion.recibirObjeto(cliente);
-            String idUser = (String) Seguridad.descifrar(clavePrivPropia, so);
-            //Obtengo de la bd el perfil del usuario 
-            Perfil p = ControladorPerfil.selectProfile(idUser);
-            //Cifro y envio
-            so = Seguridad.cifrar(clavePubAjena, p);
-            Comunicacion.enviarObjeto(cliente, so);
-            
-            so = (SealedObject) Comunicacion.recibirObjeto(cliente);
-            p = (Perfil) Seguridad.descifrar(clavePrivPropia, so);
-            
-            if (ControladorPerfil.updatePerfil(p)) {
-                Utilities.enviarOrden(CodeResponse.PERFIL_ACTUALIZAR_CODE, clavePubAjena, cliente);
-            }else{
-                Utilities.enviarOrden(CodeResponse.ERROR_CODE, clavePubAjena, cliente);
+        short orden = 0;
+        do {
+            try {
+                orden = Utilities.recibirOrden(cliente, clavePrivPropia);
+                //Recibo el id del usuario
+                SealedObject so = (SealedObject) Comunicacion.recibirObjeto(cliente);
+                String idUser = (String) Seguridad.descifrar(clavePrivPropia, so);
+                //Obtengo de la bd el perfil del usuario 
+                Perfil p = ControladorPerfil.selectProfile(idUser);
+                //Cifro y envio
+                so = Seguridad.cifrar(clavePubAjena, p);
+                Comunicacion.enviarObjeto(cliente, so);
+
+                so = (SealedObject) Comunicacion.recibirObjeto(cliente);
+                p = (Perfil) Seguridad.descifrar(clavePrivPropia, so);
+
+                if (ControladorPerfil.updatePerfil(p)) {
+                    Utilities.enviarOrden(CodeResponse.PERFIL_ACTUALIZAR_CODE, clavePubAjena, cliente);
+                } else {
+                    Utilities.enviarOrden(CodeResponse.ERROR_CODE, clavePubAjena, cliente);
+                }
+
+            } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException
+                    | IOException | ClassNotFoundException | IllegalBlockSizeException | BadPaddingException ex) {
+                ex.printStackTrace();
             }
-            
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | 
-                IOException | ClassNotFoundException | IllegalBlockSizeException | BadPaddingException ex) {
-            ex.printStackTrace();
-        }
+        } while (orden != CodeResponse.SALIR_CODE);
+        
         System.out.println("HE MUERTO HILO PERFIL");
+        HiloMain hm = new HiloMain(clavePubAjena, clavePrivPropia, cliente);
+        hm.start();
     }
 }

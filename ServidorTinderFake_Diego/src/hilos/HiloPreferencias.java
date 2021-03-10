@@ -38,27 +38,35 @@ public class HiloPreferencias extends Thread {
 
     @Override
     public void run() {
-         System.out.println("ME INICIO HILO PREFS");
-        Preferencia prefs = (Preferencia) recibirDato();
-        short orden = (short) recibirDato();
 
-        switch (orden) {
-            case CodeResponse.PREFS_ACTUALIZAR_CODE:
-                if (ControladorPrefrences.updatePreferences(prefs)) {
-                    Utilities.enviarOrden(CodeResponse.PREFS_CORRECTO_CODE, clavePubAjena, cliente);
-                } else {
-                    Utilities.enviarOrden(CodeResponse.ERROR_CODE, clavePubAjena, cliente);
-                }
-                break;
+        System.out.println("ME INICIO HILO PREFS");
+        short orden = 0;
+        do {
+            orden = (short) recibirDato();
+            System.out.println("ORDEN LLEGADA A PREFERENCES " + orden);
+            if (orden != CodeResponse.SALIR_CODE) {
+                Preferencia prefs = (Preferencia) recibirDato();
+                orden = (short) recibirDato();
 
-            case CodeResponse.PREFS_CREAR_CODE:
-                if (ControladorPrefrences.insertPreferences(prefs)) {
-                    Utilities.enviarOrden(CodeResponse.PREFS_CORRECTO_CODE, clavePubAjena, cliente);
-                } else {
-                    Utilities.enviarOrden(CodeResponse.ERROR_CODE, clavePubAjena, cliente);
+                switch (orden) {
+                    case CodeResponse.PREFS_ACTUALIZAR_CODE:
+                        if (ControladorPrefrences.updatePreferences(prefs)) {
+                            Utilities.enviarOrden(CodeResponse.PREFS_CORRECTO_CODE, clavePubAjena, cliente);
+                        } else {
+                            Utilities.enviarOrden(CodeResponse.ERROR_CODE, clavePubAjena, cliente);
+                        }
+                        break;
+
+                    case CodeResponse.PREFS_CREAR_CODE:
+                        if (ControladorPrefrences.insertPreferences(prefs)) {
+                            Utilities.enviarOrden(CodeResponse.PREFS_CORRECTO_CODE, clavePubAjena, cliente);
+                        } else {
+                            Utilities.enviarOrden(CodeResponse.ERROR_CODE, clavePubAjena, cliente);
+                        }
+                        break;
                 }
-                break;
-        }
+            }
+        } while (orden != CodeResponse.SALIR_CODE);
         System.out.println("HE MUERTO HILO PREFERENCIAS");
         HiloMain hm = new HiloMain(clavePubAjena, clavePrivPropia, cliente);
         hm.start();

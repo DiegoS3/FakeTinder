@@ -196,7 +196,7 @@ public class ProfileView extends javax.swing.JFrame {
 
         if (!username.isEmpty()) {
             try {
-                //Utilities.enviarOrden(CodeResponse.PERFIL_ACTUALIZAR_CODE, clavePubAjena, servidor);
+                Utilities.enviarOrden(CodeResponse.CONTINUAR_CODE, clavePubAjena, servidor);
                 Perfil newPerfil = new Perfil(this.perfiluser.getIduser(), username, sexo, edad);
                 SealedObject so = Seguridad.cifrar(clavePubAjena, newPerfil);
                 Comunicacion.enviarObjeto(servidor, so);

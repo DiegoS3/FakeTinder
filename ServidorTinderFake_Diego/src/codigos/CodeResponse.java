@@ -7,9 +7,10 @@ package codigos;
  */
 public class CodeResponse {
     
-    //Codigo de error
+    //Codigo general
     public static final short ERROR_CODE = -1;
     public static final short SALIR_CODE = 404;
+    public static final short CONTINUAR_CODE = 201;
     
     //Codigos Login
     public static final short LOGIN_CODE = 1;   

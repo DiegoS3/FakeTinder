@@ -63,9 +63,9 @@
         <DimensionLayout dim="1">
           <Group type="103" groupAlignment="0" attributes="0">
               <Group type="102" alignment="1" attributes="0">
+                  <EmptySpace pref="96" max="32767" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Group type="102" attributes="0">
-                          <EmptySpace pref="177" max="32767" attributes="0"/>
+                      <Group type="102" alignment="1" attributes="0">
                           <Component id="btnPerfil" min="-2" pref="37" max="-2" attributes="0"/>
                           <EmptySpace type="separate" max="-2" attributes="0"/>
                           <Component id="btnPrefes" min="-2" pref="37" max="-2" attributes="0"/>
@@ -76,10 +76,7 @@
                           <EmptySpace min="-2" pref="30" max="-2" attributes="0"/>
                           <Component id="btnSalir" min="-2" pref="37" max="-2" attributes="0"/>
                       </Group>
-                      <Group type="102" alignment="0" attributes="0">
-                          <EmptySpace pref="96" max="32767" attributes="0"/>
-                          <Component id="pnlTable" min="-2" max="-2" attributes="0"/>
-                      </Group>
+                      <Component id="pnlTable" alignment="1" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace min="-2" pref="16" max="-2" attributes="0"/>
               </Group>
@@ -128,7 +125,7 @@
 
           <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
           <SubComponents>
-            <Component class="RSMaterialComponent.RSTableMetroCustom" name="tbUsers">
+            <Component class="RSMaterialComponent.RSTableMetroCustom" name="tbUsersAfindes">
               <Properties>
                 <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
                   <Color blue="cc" green="cc" red="cc" type="rgb"/>
@@ -137,8 +134,8 @@
                   <Table columnCount="4" rowCount="4">
                     <Column editable="false" title="Nombre" type="java.lang.String"/>
                     <Column editable="false" title="Email" type="java.lang.String"/>
-                    <Column editable="false" title="Activado" type="java.lang.String"/>
-                    <Column editable="false" title="Rol" type="java.lang.String"/>
+                    <Column editable="false" title="Sexo" type="java.lang.String"/>
+                    <Column editable="false" title="Edad" type="java.lang.Integer"/>
                   </Table>
                 </Property>
                 <Property name="backgoundHead" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
