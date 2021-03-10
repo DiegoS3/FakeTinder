@@ -5,11 +5,16 @@
  */
 package views;
 
+import comunicacion.Comunicacion;
+import constantes.ConstantesRoles;
 import datos.Preferencia;
 import datos.Usuario;
+import java.io.IOException;
 import java.net.Socket;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.ArrayList;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -33,6 +38,11 @@ public class MainView extends javax.swing.JFrame {
         this.clavePubAjena = clavePubAjena;
         this.userLogeado = u;
         this.prefsUserLog = p;
+        init();
+    }
+
+    private void init() {
+        initRol();
     }
 
     /**
@@ -45,15 +55,96 @@ public class MainView extends javax.swing.JFrame {
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
+        btnAscRol = new newscomponents.RSButtonIcon_new();
+        btnAddUser = new newscomponents.RSButtonIcon_new();
+        btnActiveUser = new newscomponents.RSButtonIcon_new();
+        btnDelUser = new newscomponents.RSButtonIcon_new();
+        btnDescRol = new newscomponents.RSButtonIcon_new();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
         btnPrefes = new javax.swing.JButton();
         btnMsg = new javax.swing.JButton();
         btnAdmin = new javax.swing.JButton();
         btnSalir = new javax.swing.JButton();
         btnPerfil = new javax.swing.JButton();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        tbUsers = new javax.swing.JTable();
+        pnlTable = new javax.swing.JScrollPane();
+        tbUsers = new RSMaterialComponent.RSTableMetroCustom();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        jPanel1.setBackground(new java.awt.Color(255, 255, 255));
+
+        btnAscRol.setBackground(new java.awt.Color(255, 153, 51));
+        btnAscRol.setText("ASCENDER");
+        btnAscRol.setBackgroundHover(new java.awt.Color(204, 102, 0));
+        btnAscRol.setFont(new java.awt.Font("Roboto Bold", 1, 12)); // NOI18N
+        btnAscRol.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        btnAscRol.setIcons(rojeru_san.efectos.ValoresEnum.ICONS.ARROW_DROP_UP);
+        btnAscRol.setRound(10);
+        btnAscRol.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAscRolActionPerformed(evt);
+            }
+        });
+
+        btnAddUser.setBackground(new java.awt.Color(0, 153, 0));
+        btnAddUser.setText("Añadir");
+        btnAddUser.setBackgroundHover(new java.awt.Color(0, 102, 51));
+        btnAddUser.setFont(new java.awt.Font("Roboto Bold", 1, 12)); // NOI18N
+        btnAddUser.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        btnAddUser.setIcons(rojeru_san.efectos.ValoresEnum.ICONS.ADD_CIRCLE);
+        btnAddUser.setRound(10);
+        btnAddUser.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAddUserActionPerformed(evt);
+            }
+        });
+
+        btnActiveUser.setBackground(new java.awt.Color(51, 102, 255));
+        btnActiveUser.setText("Activar");
+        btnActiveUser.setBackgroundHover(new java.awt.Color(0, 51, 153));
+        btnActiveUser.setFont(new java.awt.Font("Roboto Bold", 1, 12)); // NOI18N
+        btnActiveUser.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        btnActiveUser.setIcons(rojeru_san.efectos.ValoresEnum.ICONS.CHECK_CIRCLE);
+        btnActiveUser.setRound(10);
+        btnActiveUser.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnActiveUserActionPerformed(evt);
+            }
+        });
+
+        btnDelUser.setBackground(new java.awt.Color(255, 0, 0));
+        btnDelUser.setText("Eliminar");
+        btnDelUser.setBackgroundHover(new java.awt.Color(204, 0, 51));
+        btnDelUser.setFont(new java.awt.Font("Roboto Bold", 1, 12)); // NOI18N
+        btnDelUser.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        btnDelUser.setIcons(rojeru_san.efectos.ValoresEnum.ICONS.CANCEL);
+        btnDelUser.setRound(10);
+        btnDelUser.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDelUserActionPerformed(evt);
+            }
+        });
+
+        btnDescRol.setBackground(new java.awt.Color(153, 0, 255));
+        btnDescRol.setText("DESCENDER");
+        btnDescRol.setBackgroundHover(new java.awt.Color(153, 0, 153));
+        btnDescRol.setFont(new java.awt.Font("Roboto Bold", 1, 12)); // NOI18N
+        btnDescRol.setIcons(rojeru_san.efectos.ValoresEnum.ICONS.ARROW_DROP_DOWN);
+        btnDescRol.setRound(10);
+        btnDescRol.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDescRolActionPerformed(evt);
+            }
+        });
+
+        jLabel1.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel1.setForeground(new java.awt.Color(51, 51, 51));
+        jLabel1.setText("USUARIOS");
+
+        jLabel2.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel2.setForeground(new java.awt.Color(51, 51, 51));
+        jLabel2.setText("ROLES");
 
         btnPrefes.setText("Preferencias");
 
@@ -65,6 +156,7 @@ public class MainView extends javax.swing.JFrame {
 
         btnPerfil.setText("Perfil");
 
+        tbUsers.setBackground(new java.awt.Color(204, 204, 204));
         tbUsers.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null},
@@ -73,51 +165,100 @@ public class MainView extends javax.swing.JFrame {
                 {null, null, null, null}
             },
             new String [] {
-                "Title 1", "Title 2", "Title 3", "Title 4"
+                "Nombre", "Email", "Activado", "Rol"
             }
-        ));
-        jScrollPane1.setViewportView(tbUsers);
+        ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+            };
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        tbUsers.setBackgoundHead(new java.awt.Color(204, 102, 255));
+        tbUsers.setBackgoundHover(new java.awt.Color(153, 102, 255));
+        tbUsers.setColorBorderHead(new java.awt.Color(255, 255, 255));
+        pnlTable.setViewportView(tbUsers);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(28, 28, 28)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnPrefes, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnMsg, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnPerfil, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnAdmin, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnSalir, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(38, 38, 38)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 495, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(228, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(37, 37, 37)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(btnPrefes, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnMsg, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnPerfil, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnAdmin, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnSalir, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(37, 37, 37)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(btnAddUser, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(btnActiveUser, javax.swing.GroupLayout.PREFERRED_SIZE, 97, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(btnDelUser, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(51, 51, 51)
+                                .addComponent(btnAscRol, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(btnDescRol, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(pnlTable)))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(283, 283, 283)
+                        .addComponent(jLabel1)
+                        .addGap(265, 265, 265)
+                        .addComponent(jLabel2)))
+                .addContainerGap(255, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap(107, Short.MAX_VALUE)
+                .addContainerGap(20, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(jLabel2))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnAscRol, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnAddUser, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnActiveUser, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnDelUser, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnDescRol, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(78, 78, 78)
                         .addComponent(btnPerfil, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(44, 44, 44)
+                        .addGap(18, 18, 18)
                         .addComponent(btnPrefes, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(52, 52, 52)
+                        .addGap(18, 18, 18)
                         .addComponent(btnMsg, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(105, 105, 105)
                         .addComponent(btnAdmin, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(30, 30, 30)
-                        .addComponent(btnSalir, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(15, 15, 15))
+                        .addComponent(btnSalir, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(7, 7, 7)
+                        .addComponent(pnlTable, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(16, 16, 16))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -127,15 +268,87 @@ public class MainView extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnAscRolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAscRolActionPerformed
+        
+    }//GEN-LAST:event_btnAscRolActionPerformed
+
+    private void btnAddUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddUserActionPerformed
+        
+    }//GEN-LAST:event_btnAddUserActionPerformed
+
+    private void btnActiveUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnActiveUserActionPerformed
+        
+    }//GEN-LAST:event_btnActiveUserActionPerformed
+
+    private void btnDelUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelUserActionPerformed
+        
+    }//GEN-LAST:event_btnDelUserActionPerformed
+
+    private void btnDescRolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDescRolActionPerformed
+        
+    }//GEN-LAST:event_btnDescRolActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private newscomponents.RSButtonIcon_new btnActiveUser;
+    private newscomponents.RSButtonIcon_new btnAddUser;
     private javax.swing.JButton btnAdmin;
+    private newscomponents.RSButtonIcon_new btnAscRol;
+    private newscomponents.RSButtonIcon_new btnDelUser;
+    private newscomponents.RSButtonIcon_new btnDescRol;
     private javax.swing.JButton btnMsg;
     private javax.swing.JButton btnPerfil;
     private javax.swing.JButton btnPrefes;
     private javax.swing.JButton btnSalir;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable tbUsers;
+    private javax.swing.JScrollPane pnlTable;
+    private RSMaterialComponent.RSTableMetroCustom tbUsers;
     // End of variables declaration//GEN-END:variables
+
+    private void initRol() {
+        if (userLogeado.getRol().equals(ConstantesRoles.ROL_ADMIN)) {
+            cargarTabla();
+        } else {
+            btnAdmin.setVisible(false);
+        }
+    }
+
+    private void cargarTabla() {
+        try {
+            ArrayList<Usuario> users = (ArrayList<Usuario>) Comunicacion.recibirObjeto(servidor);
+            System.out.println("RECIBIDA LISTA USERS");
+
+            DefaultTableModel modeloTabla = (DefaultTableModel) this.tbUsers.getModel();
+            while (modeloTabla.getRowCount() > 0) {
+                modeloTabla.removeRow(0);
+            }
+            Object[] o = new Object[4];
+            for (int i = 0; i < users.size(); i++) {
+                Usuario u = users.get(i);
+                o[0] = u.getNombre();
+                o[1] = u.getEmail();
+                o[2] = activado(u.isActivado());
+                o[3] = u.getRol();
+
+                modeloTabla.addRow(o);
+            }
+
+            this.tbUsers.setModel(modeloTabla);
+            this.tbUsers.setDefaultEditor(Object.class, null);
+        } catch (IOException | ClassNotFoundException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private String activado(boolean acti) {
+        String estado;
+        if (acti) {
+            estado = "Activado";
+        } else {
+            estado = "Desactivado";
+        }
+        return estado;
+    }
 }

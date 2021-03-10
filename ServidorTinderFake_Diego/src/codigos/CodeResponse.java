@@ -25,7 +25,12 @@ public class CodeResponse {
     public static final short PREFS_CREAR_CODE = 8;  
     public static final short PREFS_CORRECTO_CODE = 9;   
     
-    
-    
+    //Codigo Admin
+    public static final short ADMIN_CODE = 10;  
+    public static final short ADD_CODE = 11;  
+    public static final short ACTIVAR_CODE = 12;  
+    public static final short DELETE_CODE = 13;  
+    public static final short ASC_CODE = 14;  
+    public static final short DESC_CODE = 15;  
     
 }
