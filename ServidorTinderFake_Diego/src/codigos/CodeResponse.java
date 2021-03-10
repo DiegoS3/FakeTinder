@@ -41,5 +41,15 @@ public class CodeResponse {
     //Codigo Perfil
     public static final short PERFIL_CODE = 19; 
     public static final short PERFIL_ACTUALIZAR_CODE = 20; 
+        
+    //Usuario afines
+    public static final short AFINES_CODE = 21;
+    public static final short AMIGUIS_CODE = 22;
+    public static final short YA_SON_CODE = 23;
+    public static final short ESPERA_AC_CODE = 24;
+    public static final short ACEPTADA_CODE = 25;
+    public static final short CREADA_CODE = 26;
+    
+    
     
 }

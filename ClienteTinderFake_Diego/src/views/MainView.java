@@ -6,17 +6,31 @@
 package views;
 
 import codigos.CodeResponse;
+import comunicacion.Comunicacion;
 import constantes.ConstantesRoles;
+import datos.Afinidad;
+import datos.Amigo;
 import datos.Preferencia;
 import datos.Usuario;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.net.Socket;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SealedObject;
+import javax.swing.DefaultListModel;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+import seguridad.Seguridad;
 import utilities.Utilities;
 
 /**
@@ -30,7 +44,8 @@ public class MainView extends javax.swing.JFrame {
     private PublicKey clavePubAjena;
     private Usuario userLogeado;
     private Preferencia prefsUserLog;
-    private ArrayList<Usuario> listaUsuarios;
+    private ArrayList<Afinidad> afines;
+    private ArrayList<String> amigos;
     private JDialog frame;
 
     /**
@@ -48,6 +63,29 @@ public class MainView extends javax.swing.JFrame {
 
     private void init() {
         initRol();
+        pedirDatos();
+        cargarTabla();
+        mostrarAmigos();
+    }
+
+    private void pedirDatos() {
+        try {
+            Utilities.enviarOrden(CodeResponse.AFINES_CODE, clavePubAjena, servidor);
+
+            SealedObject so = Seguridad.cifrar(clavePubAjena, this.userLogeado);
+            Comunicacion.enviarObjeto(servidor, so);
+
+            so = Seguridad.cifrar(clavePubAjena, this.prefsUserLog);
+            Comunicacion.enviarObjeto(servidor, so);
+
+            rellenarLista();
+
+            listaramigos();
+
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IOException
+                | IllegalBlockSizeException ex) {
+            ex.printStackTrace();
+        }
     }
 
     /**
@@ -67,6 +105,9 @@ public class MainView extends javax.swing.JFrame {
         btnPerfil = new javax.swing.JButton();
         pnlTable = new javax.swing.JScrollPane();
         tbUsersAfindes = new RSMaterialComponent.RSTableMetroCustom();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        lstListaAmigos = new javax.swing.JList<>();
+        btnMeGusta = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -89,6 +130,11 @@ public class MainView extends javax.swing.JFrame {
         });
 
         btnSalir.setText("Salir");
+        btnSalir.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSalirActionPerformed(evt);
+            }
+        });
 
         btnPerfil.setText("Perfil");
         btnPerfil.addActionListener(new java.awt.event.ActionListener() {
@@ -129,39 +175,58 @@ public class MainView extends javax.swing.JFrame {
         tbUsersAfindes.setColorBorderHead(new java.awt.Color(255, 255, 255));
         pnlTable.setViewportView(tbUsersAfindes);
 
+        lstListaAmigos.setModel(new javax.swing.AbstractListModel<String>() {
+            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
+            public int getSize() { return strings.length; }
+            public String getElementAt(int i) { return strings[i]; }
+        });
+        jScrollPane1.setViewportView(lstListaAmigos);
+
+        btnMeGusta.setText("Like");
+        btnMeGusta.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnMeGustaActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(33, 33, 33)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnMsg, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnPrefes, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnPerfil, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(btnSalir, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(btnAdmin, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(btnMsg, javax.swing.GroupLayout.DEFAULT_SIZE, 107, Short.MAX_VALUE)
+                    .addComponent(btnPrefes, javax.swing.GroupLayout.DEFAULT_SIZE, 107, Short.MAX_VALUE)
+                    .addComponent(btnPerfil, javax.swing.GroupLayout.DEFAULT_SIZE, 107, Short.MAX_VALUE)
+                    .addComponent(btnSalir, javax.swing.GroupLayout.DEFAULT_SIZE, 107, Short.MAX_VALUE)
+                    .addComponent(btnAdmin, javax.swing.GroupLayout.DEFAULT_SIZE, 107, Short.MAX_VALUE)
+                    .addComponent(btnMeGusta, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addGap(28, 28, 28)
                 .addComponent(pnlTable, javax.swing.GroupLayout.PREFERRED_SIZE, 608, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(255, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 216, Short.MAX_VALUE)
+                .addGap(21, 21, 21))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap(96, Short.MAX_VALUE)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap(18, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 437, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(btnPerfil, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(btnPrefes, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(btnMsg, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(105, 105, 105)
+                        .addGap(18, 18, 18)
+                        .addComponent(btnMeGusta, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(60, 60, 60)
                         .addComponent(btnAdmin, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(30, 30, 30)
+                        .addGap(18, 18, 18)
                         .addComponent(btnSalir, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(pnlTable, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(pnlTable, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(16, 16, 16))
         );
 
@@ -183,7 +248,8 @@ public class MainView extends javax.swing.JFrame {
     private void btnAdminActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAdminActionPerformed
         Utilities.enviarOrden(CodeResponse.ADMIN_CODE, clavePubAjena, servidor);
         AdminView admin = new AdminView(servidor, clavePrivPropia, clavePubAjena, userLogeado);
-        iniciarFrameDialog(admin);
+        //iniciarFrameDialog(admin);
+        admin.setVisible(true);
     }//GEN-LAST:event_btnAdminActionPerformed
 
     private void btnPrefesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPrefesActionPerformed
@@ -198,8 +264,52 @@ public class MainView extends javax.swing.JFrame {
 
         Utilities.enviarOrden(CodeResponse.PERFIL_CODE, clavePubAjena, servidor);
         ProfileView prof = new ProfileView(servidor, clavePrivPropia, clavePubAjena, userLogeado.getId(), frame);
-        iniciarFrameDialog(prof);
+        //iniciarFrameDialog(prof);
+        prof.setVisible(true);
     }//GEN-LAST:event_btnPerfilActionPerformed
+
+    private void btnMeGustaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMeGustaActionPerformed
+        likear();
+    }//GEN-LAST:event_btnMeGustaActionPerformed
+
+    private void btnSalirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalirActionPerformed
+        this.dispose();
+    }//GEN-LAST:event_btnSalirActionPerformed
+
+    private void likear() {
+        Afinidad uSelected = getUserTable();
+
+        if (uSelected != null) {
+            try {
+                Utilities.enviarOrden(CodeResponse.AMIGUIS_CODE, clavePubAjena, servidor);
+                String[] ids = {userLogeado.getId(), uSelected.getIdUser()};
+                SealedObject so = Seguridad.cifrar(clavePubAjena, ids);
+                Comunicacion.enviarObjeto(servidor, so);
+
+                short res = Utilities.recibirOrden(servidor, clavePrivPropia);
+                switch (res) {
+                    case CodeResponse.ACEPTADA_CODE:
+                        Utilities.showMessage("Amistad creada", "AMISTAD", JOptionPane.PLAIN_MESSAGE);
+                        break;
+
+                    case CodeResponse.YA_SON_CODE:
+                        Utilities.showMessage("Ya sois amigos, no seas ansioso", "AMISTAD", JOptionPane.PLAIN_MESSAGE);
+                        break;
+
+                    case CodeResponse.ESPERA_AC_CODE:
+                        Utilities.showMessage("Espera a que acepte, no seas ansioso", "AMISTAD", JOptionPane.PLAIN_MESSAGE);
+                        break;
+
+                    case CodeResponse.CREADA_CODE:
+                        Utilities.showMessage("Solicitud enviada", "AMISTAD", JOptionPane.PLAIN_MESSAGE);
+                        break;
+                }
+
+            } catch (IOException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
 
     private void iniciarFrameDialog(JFrame f) {
         frame = new JDialog(this, "", true);
@@ -207,25 +317,50 @@ public class MainView extends javax.swing.JFrame {
         frame.pack();
         frame.setLocationRelativeTo(this);
         frame.setVisible(true);
-        
-        frame.addWindowListener(new WindowAdapter() {
-            public void windowClosed(WindowEvent e) {
-                System.out.println("jdialog window closed event received");
-            }
+    }
 
-            public void windowClosing(WindowEvent e) {
-                System.out.println("jdialog window closing event received");
-            }
-        });
+    private void cargarTabla() {
+        //this.listaUsuarios = rellenarLista();
+        DefaultTableModel modeloTabla = (DefaultTableModel) this.tbUsersAfindes.getModel();
+        while (modeloTabla.getRowCount() > 0) {
+            modeloTabla.removeRow(0);
+        }
+        Object[] o = new Object[4];
+        for (int i = 0; i < afines.size(); i++) {
+            Afinidad u = afines.get(i);
+            o[0] = u.getNombre();
+            o[1] = u.getEmail();
+            o[2] = u.getSexo();
+            o[3] = u.getEdad();
+
+            modeloTabla.addRow(o);
+        }
+        this.tbUsersAfindes.setModel(modeloTabla);
+        this.tbUsersAfindes.setDefaultEditor(Object.class, null);
+    }
+
+    private Afinidad getUserTable() {
+        Afinidad user = null;
+
+        if (this.tbUsersAfindes.getSelectedRowCount() == 0) {
+            Utilities.showMessage("Debes seleccionar al menos a un Usuario", "ERROR", JOptionPane.ERROR_MESSAGE);
+        } else {
+            int row = this.tbUsersAfindes.getSelectedRow();
+            user = this.afines.get(row);
+        }
+        return user;
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAdmin;
+    private javax.swing.JButton btnMeGusta;
     private javax.swing.JButton btnMsg;
     private javax.swing.JButton btnPerfil;
     private javax.swing.JButton btnPrefes;
     private javax.swing.JButton btnSalir;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JList<String> lstListaAmigos;
     private javax.swing.JScrollPane pnlTable;
     private RSMaterialComponent.RSTableMetroCustom tbUsersAfindes;
     // End of variables declaration//GEN-END:variables
@@ -236,5 +371,46 @@ public class MainView extends javax.swing.JFrame {
         } else {
             btnAdmin.setVisible(false);
         }
+    }
+
+    private void rellenarLista() {
+        try {
+            ArrayList<SealedObject> lista = (ArrayList<SealedObject>) Comunicacion.recibirObjeto(servidor);
+            this.afines = new ArrayList<>();
+
+            for (int i = 0; i < lista.size(); i++) {
+                Afinidad a = (Afinidad) Seguridad.descifrar(clavePrivPropia, lista.get(i));
+                this.afines.add(a);
+            }
+        } catch (IOException | ClassNotFoundException | NoSuchAlgorithmException
+                | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void listaramigos() {
+
+        try {
+            ArrayList<SealedObject> lista = (ArrayList<SealedObject>) Comunicacion.recibirObjeto(servidor);
+            this.amigos = new ArrayList<>();
+
+            for (int i = 0; i < lista.size(); i++) {
+                String a = (String) Seguridad.descifrar(clavePrivPropia, lista.get(i));
+                this.amigos.add(a);
+            }
+        } catch (IOException | ClassNotFoundException | NoSuchAlgorithmException
+                | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void mostrarAmigos() {
+        DefaultListModel model = new DefaultListModel();
+
+        for (int i = 0; i < amigos.size(); i++) {
+            model.addElement(amigos.get(i));
+        }
+
+        this.lstListaAmigos.setModel(model);
     }
 }

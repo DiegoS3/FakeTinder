@@ -48,16 +48,19 @@ public class HiloSignUp extends Thread {
     @Override
     public void run() {
         System.out.println("ME INICIO HILO SIGN UP");
-        comprobarSignUp();
-        if (modoAdmin) {
-            HiloRolAdmin hra = new HiloRolAdmin(cliente, clavePubAjena, clavePrivPropia);
-            hra.start();
-            
-        } else {
-            HiloMain hm = new HiloMain(clavePubAjena, clavePrivPropia, cliente);
-            hm.start();
+        short orden = Utilities.recibirOrden(cliente, clavePrivPropia);
+        if (orden != CodeResponse.CONTINUAR_CODE) {
+            comprobarSignUp();
+            if (modoAdmin) {
+                HiloRolAdmin hra = new HiloRolAdmin(cliente, clavePubAjena, clavePrivPropia);
+                hra.start();
+
+            } else {
+                HiloMain hm = new HiloMain(clavePubAjena, clavePrivPropia, cliente);
+                hm.start();
+            }
         }
-        
+
         System.out.println("HE MUERTO HILO SIGN UP");
 
     }

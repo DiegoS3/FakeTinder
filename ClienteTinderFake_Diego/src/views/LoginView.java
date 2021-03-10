@@ -97,6 +97,11 @@ public class LoginView extends javax.swing.JFrame {
         btnSignUp = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
 
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("TINDER FAKE");
@@ -201,7 +206,7 @@ public class LoginView extends javax.swing.JFrame {
             //existen preferencias
             if (Utilities.recibirOrden(servidor, clavePrivPropia) == CodeResponse.PREFS_EXSTEN_CODE) {
                 prefs = (Preferencia) recibirObjeto(); //preferencias del usuario logueado
-                
+
                 MainView main = new MainView(servidor, clavePrivPropia, clavePubAjena, userLogeado, prefs);
                 main.setVisible(true);
                 this.dispose();
@@ -215,18 +220,23 @@ public class LoginView extends javax.swing.JFrame {
             }
 
             //iniciar menu principal, pasanddo usuario, claves y servidor
-        }else if(respuesta == CodeResponse.LOGIN_NO_ACTIVADO_CODE){
+        } else if (respuesta == CodeResponse.LOGIN_NO_ACTIVADO_CODE) {
             Utilities.showMessage("Cuenta no activada, en brevas lo hara un administrador", "ERROR LOGIN", JOptionPane.INFORMATION_MESSAGE);
-        } 
-        else {
+        } else {
             Utilities.showMessage("Email o Contraseña incorrectos", "ERROR LOGIN", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_btnLoginActionPerformed
 
     private void btnSignUpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSignUpActionPerformed
+        System.out.println("ENVIO MODO SIGN UP");
+        Utilities.enviarOrden(CodeResponse.SIGNUP_CODE, clavePubAjena, servidor);
         SignUpView signup = new SignUpView(servidor, clavePrivPropia, clavePubAjena);
         signup.setVisible(true);
     }//GEN-LAST:event_btnSignUpActionPerformed
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        Utilities.enviarOrden(CodeResponse.SALIR_CODE, clavePubAjena, servidor);
+    }//GEN-LAST:event_formWindowClosing
 
     private Usuario crearUsuario() {
         Usuario u = null;

@@ -187,5 +187,28 @@ public class ControladorUser {
         }
         return listaUsers;
     }
+    
+    public synchronized static String obtenerNombreUsuarios(String id) {
+
+        Connection conexion = abrirConexion();
+        String nombre = "";
+
+        if (conexion != null) {
+            try {
+                try (Statement st = (Statement) conexion.createStatement()) {
+                    sentencia = "SELECT * FROM " + ConstantesBD.TABLAUSUARIOS + " WHERE id like '" + id + "'";
+                    ResultSet rs = st.executeQuery(sentencia);
+                    while (rs.next()) {
+                        nombre = rs.getString("nombre");
+                    }
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            } finally {
+                cerrarConexion(conexion);
+            }
+        }
+        return nombre;
+    }
 
 }

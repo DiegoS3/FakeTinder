@@ -11,7 +11,7 @@ package constantes;
  */
 public class ConstantesBD {
 
-    public static final String BD = "tinder_fake";
+    public static final String BD = "tinderfake";
     public static final String USUARIO = "root";
     public static final String PASSWD = "";
     public static final String TABLAUSUARIOS = "usuario";
@@ -19,5 +19,8 @@ public class ConstantesBD {
     public static final String TABLAROLES_USERS = "roles_users";
     public static final String TABLAPREFES = "preferencia";
     public static final String TABLAPERFIL = "perfil";
+    public static final String TABLAAMIGOS = "amigos";
+    public static final String TABLACONVERSACION = "conversacion";
+    public static final String TABLAMSG = "mensajes";
 
 }
