@@ -38,6 +38,28 @@ public class ControladorRoles {
         }
     }
     
+    public static boolean modRol(String idUsuario, int idRol){
+        boolean exito = false;
+        Connection conexion = abrirConexion();
+
+        if (conexion != null) {
+            try {
+                try (Statement st = (Statement) conexion.createStatement()) {
+                    sentencia = "UPDATE " + ConstantesBD.TABLAROLES_USERS + " SET idRol = " + idRol + " WHERE idUser = '" + idUsuario + "'";
+
+                    if (st.executeUpdate(sentencia) == 1) {
+                        exito = true;
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                cerrarConexion(conexion);
+            }
+        }
+        return exito;
+    }
+    
     private static String selectIdRol(String id, Connection conexion) {
         String idRol = "";
         if (conexion != null) {
@@ -84,6 +106,27 @@ public class ControladorRoles {
             }
         }
         return tipoUser;
+    }
+    
+    public synchronized static boolean delRolUser(String idUser){
+        boolean exito = false;
+        Connection conexion = abrirConexion();
+        
+        if (conexion != null) {
+            try {
+                try (Statement st = (Statement) conexion.createStatement()) {
+                    sentencia = "DELETE FROM " + ConstantesBD.TABLAROLES_USERS + " WHERE idUser = '" + idUser + "'";
+                    if (st.executeUpdate(sentencia) == 1) {
+                        exito = true;
+                    }
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            } finally {
+                cerrarConexion(conexion);
+            }
+        }
+        return exito;
     }
     
 }

@@ -140,7 +140,10 @@ public class ControladorUser {
             try {
                 try (Statement st = (Statement) conexion.createStatement()) {
                     sentencia = "DELETE FROM " + ConstantesBD.TABLAUSUARIOS + " WHERE id = '" + id + "'";
-
+                    //Eliminamos todos los registros del usuario en la BD
+                    ControladorPerfil.delPerfil(id);
+                    ControladorPrefrences.delPreferencia(id);
+                    ControladorRoles.delRolUser(id);
                     if (st.executeUpdate(sentencia) == 1) {
                         exito = true;
                     }

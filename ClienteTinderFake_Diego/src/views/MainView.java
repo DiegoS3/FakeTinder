@@ -23,6 +23,8 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SealedObject;
+import javax.swing.JDialog;
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import seguridad.Seguridad;
 import utilities.Utilities;
@@ -38,6 +40,7 @@ public class MainView extends javax.swing.JFrame {
     private PublicKey clavePubAjena;
     private Usuario userLogeado;
     private Preferencia prefsUserLog;
+    private ArrayList<Usuario> listaUsuarios;
 
     /**
      * Creates new form MainView
@@ -278,26 +281,28 @@ public class MainView extends javax.swing.JFrame {
         );
 
         pack();
+        setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnAscRolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAscRolActionPerformed
-
+        actuar(CodeResponse.ASC_CODE, "Exito al ascender al Usuario", "Error al ascender al Usuario", "ASCENDER USUARIO");
     }//GEN-LAST:event_btnAscRolActionPerformed
 
     private void btnAddUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddUserActionPerformed
-
+        //Utilities.enviarOrden(CodeResponse.ADD_CODE, clavePubAjena, servidor);
+        mostraSignUpDialog();
     }//GEN-LAST:event_btnAddUserActionPerformed
 
     private void btnActiveUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnActiveUserActionPerformed
-
+        actuar(CodeResponse.ACTIVAR_CODE, "Exito al activar al Usuario", "Error al activar al Usuario", "ACTIVAR USUARIO");
     }//GEN-LAST:event_btnActiveUserActionPerformed
 
     private void btnDelUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelUserActionPerformed
-
+        actuar(CodeResponse.DELETE_CODE, "Exito al eliminar al Usuario", "Error al eliminar al Usuario", "ELIMINAR USUARIO");
     }//GEN-LAST:event_btnDelUserActionPerformed
 
     private void btnDescRolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDescRolActionPerformed
-
+        actuar(CodeResponse.DESC_CODE, "Exito al descender al Usuario", "Error al descender al Usuario", "DESCENDER USUARIO");
     }//GEN-LAST:event_btnDescRolActionPerformed
 
 
@@ -340,26 +345,26 @@ public class MainView extends javax.swing.JFrame {
 
     private ArrayList<Usuario> rellenarLista() {
         ArrayList<Usuario> listaUsersNoCifrados = new ArrayList<>();
-        
+
         try {
             ArrayList<SealedObject> users = (ArrayList<SealedObject>) Comunicacion.recibirObjeto(servidor);
             System.out.println("RECIBIDA LISTA USERS CIFRADOS");
-            
+
             for (int i = 0; i < users.size(); i++) {
                 Usuario u = (Usuario) Seguridad.descifrar(clavePrivPropia, users.get(i));
                 listaUsersNoCifrados.add(u);
             }
-            
-        } catch (IOException | ClassNotFoundException | NoSuchAlgorithmException | NoSuchPaddingException 
+
+        } catch (IOException | ClassNotFoundException | NoSuchAlgorithmException | NoSuchPaddingException
                 | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
             ex.printStackTrace();
         }
-        
+
         return listaUsersNoCifrados;
     }
 
     private void cargarTabla() {
-        ArrayList<Usuario> listaUsuarios = rellenarLista();
+        this.listaUsuarios = rellenarLista();
         DefaultTableModel modeloTabla = (DefaultTableModel) this.tbUsers.getModel();
         while (modeloTabla.getRowCount() > 0) {
             modeloTabla.removeRow(0);
@@ -386,5 +391,52 @@ public class MainView extends javax.swing.JFrame {
             estado = "Desactivado";
         }
         return estado;
+    }
+
+    private Usuario getUserTable() {
+        Usuario user = null;
+
+        if (this.tbUsers.getSelectedRowCount() == 0) {
+            Utilities.showMessage("Debes seleccionar al menos a un Usuario", "ERROR", JOptionPane.ERROR_MESSAGE);
+        } else {
+            int row = this.tbUsers.getSelectedRow();
+            user = this.listaUsuarios.get(row);
+        }
+        return user;
+    }
+
+    private void actuar(short code, String exito, String error, String titulo) {
+        Usuario uSelected = getUserTable();
+
+        if (uSelected != null) {
+            try {
+                Utilities.enviarOrden(code, clavePubAjena, servidor);
+                SealedObject so = Seguridad.cifrar(clavePubAjena, uSelected.getId());
+                Comunicacion.enviarObjeto(servidor, so);
+
+                so = (SealedObject) Comunicacion.recibirObjeto(servidor);
+                short respuesta = (short) Seguridad.descifrar(clavePrivPropia, so);
+
+                if (respuesta == CodeResponse.ADMIN_EXITO_CODE) {
+                    Utilities.showMessage(exito, titulo, JOptionPane.PLAIN_MESSAGE);
+                } else {
+                    Utilities.showMessage(error, titulo, JOptionPane.ERROR_MESSAGE);
+                }
+
+            } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IOException
+                    | IllegalBlockSizeException | ClassNotFoundException | BadPaddingException ex) {
+                ex.printStackTrace();
+            }
+        }
+        cargarTabla();
+    }
+
+    private void mostraSignUpDialog() {
+        SignUpView signUp = new SignUpView(servidor, clavePrivPropia, clavePubAjena);
+        final JDialog frame = new JDialog(this, "", true);
+        frame.getContentPane().add(signUp.getContentPane());
+        frame.setLocationRelativeTo(null);
+        frame.pack();
+        frame.setVisible(true);
     }
 }

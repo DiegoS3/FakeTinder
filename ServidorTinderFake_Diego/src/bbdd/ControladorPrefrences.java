@@ -107,4 +107,25 @@ public class ControladorPrefrences {
         }
         return prefs;
     }
+    
+    public synchronized static boolean delPreferencia(String idUser){
+        boolean exito = false;
+        Connection conexion = abrirConexion();
+        
+        if (conexion != null) {            
+            try {
+                try (Statement st = (Statement) conexion.createStatement()) {
+                    sentencia = "DELETE FROM " + ConstantesBD.TABLAPREFES + " WHERE idUser = '" + idUser + "'";
+                    if (st.executeUpdate(sentencia) == 1) {
+                        exito = true;
+                    }
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            } finally {
+                cerrarConexion(conexion);
+            }
+        }
+        return exito;
+    }
 }

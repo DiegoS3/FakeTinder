@@ -33,5 +33,6 @@ public class CodeResponse {
     public static final short DELETE_CODE = 13;  
     public static final short ASC_CODE = 14;  
     public static final short DESC_CODE = 15;  
+    public static final short ADMIN_EXITO_CODE = 17;  
     
 }

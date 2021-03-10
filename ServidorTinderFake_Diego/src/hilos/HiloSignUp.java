@@ -45,12 +45,14 @@ public class HiloSignUp extends Thread {
 
     @Override
     public void run() {
+        System.out.println("DENTRO DEL REGISTRO");
         comprobarSignUp();
         HiloMain hm = new HiloMain(clavePubAjena, clavePrivPropia, cliente);
         hm.start();
     }
 
     private void comprobarSignUp() {
+        System.out.println("ESPERANDO USUARIO PARA REGISTRAR");
         Usuario u = (Usuario) recibirObjeto();
 
         System.out.println("REGISTRANDO USUARIO");
