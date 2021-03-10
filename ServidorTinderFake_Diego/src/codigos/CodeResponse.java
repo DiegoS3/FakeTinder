@@ -13,7 +13,7 @@ public class CodeResponse {
     //Codigos Login
     public static final short LOGIN_CODE = 1;   
     public static final short LOGIN_CORRECTO_CODE = 2;   
-    public static final short LOGIN_NO_ACTIVADO_CODE = 16;   
+    public static final short LOGIN_NO_ACTIVADO_CODE = 16; 
     
     //Codigo Sign UP
     public static final short SIGNUP_CODE = 3; 
@@ -33,6 +33,7 @@ public class CodeResponse {
     public static final short DELETE_CODE = 13;  
     public static final short ASC_CODE = 14;  
     public static final short DESC_CODE = 15;  
-    public static final short ADMIN_EXITO_CODE = 17; 
+    public static final short ADMIN_EXITO_CODE = 17;  
+    public static final short ADMIN_FIN_CODE = 18;  
     
 }

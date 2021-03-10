@@ -35,20 +35,29 @@ public class HiloSignUp extends Thread {
     private Socket cliente;
     private PublicKey clavePubAjena;
     private PrivateKey clavePrivPropia;
+    private boolean modoAdmin;
 
-    public HiloSignUp(Socket cliente, PublicKey clavePubAjena, PrivateKey clavePrivServidor) {
+    public HiloSignUp(Socket cliente, PublicKey clavePubAjena, PrivateKey clavePrivServidor, boolean modoAdmin) {
 
         this.clavePrivPropia = clavePrivServidor;
         this.clavePubAjena = clavePubAjena;
         this.cliente = cliente;
+        this.modoAdmin = modoAdmin;
     }
 
     @Override
     public void run() {
         System.out.println("DENTRO DEL REGISTRO");
         comprobarSignUp();
-        HiloMain hm = new HiloMain(clavePubAjena, clavePrivPropia, cliente);
-        hm.start();
+        if (modoAdmin) {
+            HiloRolAdmin hra = new HiloRolAdmin(cliente, clavePubAjena, clavePrivPropia);
+            hra.start();
+            
+        } else {
+            HiloMain hm = new HiloMain(clavePubAjena, clavePrivPropia, cliente);
+            hm.start();
+        }
+
     }
 
     private void comprobarSignUp() {

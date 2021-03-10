@@ -49,18 +49,18 @@ public class HiloRolAdmin extends Thread {
                 short orden = Utilities.recibirOrden(cliente, clavePrivPropia);
                 SealedObject so = (SealedObject) Comunicacion.recibirObjeto(cliente);
                 String idUsuario = "";
-                if (orden != CodeResponse.SIGNUP_CODE) {
+                if (orden != CodeResponse.SIGNUP_CODE && orden != CodeResponse.ADMIN_FIN_CODE) {
                     idUsuario = (String) Seguridad.descifrar(clavePrivPropia, so);
-                } 
+                }
 
                 switch (orden) {
 
                     case CodeResponse.SIGNUP_CODE:
                         //addUser();
                         System.out.println("MODO ADD USER POR ADMIN");
-                        HiloSignUp hsu = new HiloSignUp(cliente, clavePubAjena, clavePrivPropia);
-                        hsu.start();
+                        HiloSignUp hsu = new HiloSignUp(cliente, clavePubAjena, clavePrivPropia, true);
                         activo = false;
+                        hsu.start();
                         break;
 
                     case CodeResponse.ACTIVAR_CODE:
@@ -79,16 +79,18 @@ public class HiloRolAdmin extends Thread {
                         descenderRol(idUsuario);
                         break;
 
+                    case CodeResponse.ADMIN_FIN_CODE:
+                        HiloMain hm = new HiloMain(clavePubAjena, clavePrivPropia, cliente);
+                        activo = false;
+                        hm.start();
+                        break;
+
                 }
             } catch (IOException | ClassNotFoundException | NoSuchAlgorithmException | NoSuchPaddingException
                     | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
                 ex.printStackTrace();
             }
-
         } while (activo);
-
-        HiloMain hm = new HiloMain(clavePubAjena, clavePrivPropia, cliente);
-        hm.start();
     }
 
     private void enviarListaUsers(String id) {

@@ -53,9 +53,9 @@ public class ControladorPrefrences {
         if (conexion != null) {
             try {
                 try (Statement st = (Statement) conexion.createStatement()) {
-                    sentencia = "UPDATE " + ConstantesBD.TABLAPREFES + " SET arte = '" + prefs.getArte() + "', deporte = '"
-                            + prefs.getDeporte() + "', politica = '" + prefs.getPolitica() + "', thijos = '" + prefs.isThijos()
-                            + "', qhijos = '" + prefs.isQhijos() + "', tiporelacion = '" + prefs.getTiporelacion() + "', interes = '" + prefs.getInteres() + "'";
+                    sentencia = "UPDATE " + ConstantesBD.TABLAPREFES + " SET arte = " + prefs.getArte() + ", deporte = "
+                            + prefs.getDeporte() + ", politica = " + prefs.getPolitica() + ", thijos = " + prefs.isThijos()
+                            + ", qhijos = " + prefs.isQhijos() + ", tiporelacion = '" + prefs.getTiporelacion() + "', interes = '" + prefs.getInteres() + "'";
 
                     if (st.executeUpdate(sentencia) == 1) {
                         exito = true;

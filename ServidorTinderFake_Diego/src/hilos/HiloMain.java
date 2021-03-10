@@ -76,7 +76,7 @@ public class HiloMain extends Thread {
 
                     case CodeResponse.SIGNUP_CODE:
                         System.out.println("MODO SIGN UP");
-                        HiloSignUp hs = new HiloSignUp(cliente, clavePubAjena, clavePrivPropia);
+                        HiloSignUp hs = new HiloSignUp(cliente, clavePubAjena, clavePrivPropia, false);
                         activo = false;
                         hs.start();
                         break;
