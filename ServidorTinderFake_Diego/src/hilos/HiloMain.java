@@ -94,6 +94,9 @@ public class HiloMain extends Thread {
                         activo = false;
                         hra.start();
                         break;
+                        
+                    case CodeResponse.PERFIL_CODE:
+                        System.out.println("MODO PERFIL");
                 }
             } while (activo);
 

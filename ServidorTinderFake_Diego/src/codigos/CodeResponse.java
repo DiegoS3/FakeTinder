@@ -19,7 +19,7 @@ public class CodeResponse {
     public static final short SIGNUP_CODE = 3; 
     public static final short SIGNUP_CORRECTO_CODE = 4;   
     
-    //Codigo Prefrencias
+    //Codigo Preferencias
     public static final short PREFS_CODE = 5; 
     public static final short PREFS_EXSTEN_CODE = 6;   
     public static final short PREFS_ACTUALIZAR_CODE = 7;   
@@ -35,5 +35,8 @@ public class CodeResponse {
     public static final short DESC_CODE = 15;  
     public static final short ADMIN_EXITO_CODE = 17;  
     public static final short ADMIN_FIN_CODE = 18;  
+    
+    //Codigo Perfil
+    public static final short PERFIL_CODE = 19; 
     
 }

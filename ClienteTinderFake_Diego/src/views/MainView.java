@@ -8,6 +8,7 @@ package views;
 import codigos.CodeResponse;
 import comunicacion.Comunicacion;
 import constantes.ConstantesRoles;
+import datos.Perfil;
 import datos.Preferencia;
 import datos.Usuario;
 import java.io.IOException;
@@ -101,6 +102,11 @@ public class MainView extends javax.swing.JFrame {
         btnSalir.setText("Salir");
 
         btnPerfil.setText("Perfil");
+        btnPerfil.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnPerfilActionPerformed(evt);
+            }
+        });
 
         tbUsers.setBackground(new java.awt.Color(204, 204, 204));
         tbUsers.setModel(new javax.swing.table.DefaultTableModel(
@@ -198,6 +204,20 @@ public class MainView extends javax.swing.JFrame {
         PreferencesView prf = new PreferencesView(servidor, clavePrivPropia, clavePubAjena, userLogeado, prefsUserLog);
         iniciarFrameDialog(prf);
     }//GEN-LAST:event_btnPrefesActionPerformed
+
+    private void btnPerfilActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPerfilActionPerformed
+        try {
+            Utilities.enviarOrden(CodeResponse.PERFIL_CODE, clavePubAjena, servidor);
+            SealedObject so = (SealedObject) Comunicacion.recibirObjeto(servidor);
+            Perfil p =  (Perfil) Seguridad.descifrar(clavePrivPropia, so);
+            ProfileView prof = new ProfileView(servidor, clavePrivPropia, clavePubAjena, p);
+            iniciarFrameDialog(prof);
+            
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IOException | 
+                ClassNotFoundException | IllegalBlockSizeException | BadPaddingException ex) {
+            ex.printStackTrace();
+        }
+    }//GEN-LAST:event_btnPerfilActionPerformed
     
     private void iniciarFrameDialog(JFrame f){
         final JDialog frame = new JDialog(this, "", true);
