@@ -5,17 +5,76 @@
  */
 package views;
 
+import codigos.CodeResponse;
+import comunicacion.Comunicacion;
+import constantes.Constantes;
+import datos.Usuario;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SealedObject;
+import javax.swing.JOptionPane;
+import seguridad.Seguridad;
+import utilities.Utilities;
+
 /**
  *
  * @author Diego
  */
 public class LoginView extends javax.swing.JFrame {
 
+    private Socket servidor;
+    private PrivateKey clavePrivPropia;
+    private PublicKey clavePubAjena;
+    private PublicKey clavePubPropia;
+
     /**
      * Creates new form LoginView
      */
     public LoginView() {
         initComponents();
+        init();
+    }
+
+    private void init() {
+        initConexionServidor();
+        intercambioPublicas();
+    }
+
+    private void initConexionServidor() {
+
+        try {
+            servidor = new Socket(InetAddress.getLocalHost(), Constantes.PORT_SERVER);
+            Object[] claves = Seguridad.generarClaves();
+            clavePrivPropia = (PrivateKey) claves[Constantes.PRIVATE_KEY];
+            clavePubPropia = (PublicKey) claves[Constantes.PUBLIC_KEY];
+
+        } catch (IOException | NoSuchAlgorithmException ex) {
+            Logger.getLogger(LoginView.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void intercambioPublicas() {
+
+        try {
+            //envio mi clave publica
+            Comunicacion.enviarObjeto(servidor, clavePubPropia);
+            //recibo la clave publica del servidor
+            this.clavePubAjena = (PublicKey) Comunicacion.recibirObjeto(servidor);
+
+        } catch (IOException | ClassNotFoundException ex) {
+            Logger.getLogger(LoginView.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**
@@ -46,8 +105,18 @@ public class LoginView extends javax.swing.JFrame {
         jLabel3.setText("Contraseña");
 
         btnLogin.setText("LOGIN");
+        btnLogin.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnLoginActionPerformed(evt);
+            }
+        });
 
-        btnSignUp.setText("Registrarse");
+        btnSignUp.setText("REGISTRARSE");
+        btnSignUp.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSignUpActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -69,7 +138,7 @@ public class LoginView extends javax.swing.JFrame {
                         .addGap(244, 244, 244))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                                 .addComponent(btnLogin)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(btnSignUp))
@@ -112,6 +181,74 @@ public class LoginView extends javax.swing.JFrame {
         pack();
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoginActionPerformed
+
+        System.out.println("ENVIO MODO LOGIN");
+        Utilities.enviarOrden(CodeResponse.LOGIN_CODE, clavePubAjena, servidor);
+
+        enviarUsuario();
+        
+        System.out.println("RECIBO RESPUESTA SERVIDOR AL LOGIN");
+        if (Utilities.recibirOrden(servidor, clavePrivPropia) != CodeResponse.ERROR_CODE) {
+            System.out.println("LOGIN CORRECTO");
+            Usuario userLogeado = recibirUsuario();
+            //iniciar menu principal, pasanddo usuario, claves y servidor
+        }else{
+            Utilities.showMessage("Email o Contraseña incorrectos", "ERROR LOGIN", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_btnLoginActionPerformed
+
+    private void btnSignUpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSignUpActionPerformed
+        SignUpView signup = new SignUpView(servidor, clavePrivPropia, clavePubAjena);
+        signup.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_btnSignUpActionPerformed
+
+    private Usuario crearUsuario() {
+        Usuario u = null;
+        try {
+            
+            String email = txtUser.getText();
+            String password = new String(txtPwd.getPassword());
+            String resumenPwd = new String(Seguridad.resumirPwd(password));
+            u = new Usuario(email, resumenPwd);
+            
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(LoginView.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return u;
+    }
+    
+    private Usuario recibirUsuario(){
+        Usuario u = null;
+        
+        try {
+            SealedObject so = (SealedObject) Comunicacion.recibirObjeto(servidor);
+            u = (Usuario) Seguridad.descifrar(clavePrivPropia, so);
+            System.out.println("RECIBIDO USUARIO DESDE SERVIDOR " + u.getEmail());
+            
+        } catch (IOException | ClassNotFoundException | NoSuchAlgorithmException | 
+                NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
+        }
+        
+        return u;
+    }
+    
+    private void enviarUsuario() {
+        try {
+            
+            Usuario u = crearUsuario();
+            
+            SealedObject so = Seguridad.cifrar(clavePubAjena, u);
+            Comunicacion.enviarObjeto(servidor, so);
+            System.out.println("ENVIO USUARIO QUE INTENTA LOGUEAR");
+
+        } catch (IOException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException ex) {
+            Logger.getLogger(LoginView.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     /**
      * @param args the command line arguments

@@ -5,17 +5,45 @@
  */
 package views;
 
+import codigos.CodeResponse;
+import comunicacion.Comunicacion;
+import constantes.ConstantesRoles;
+import datos.Perfil;
+import datos.Usuario;
+import java.io.IOException;
+import java.net.Socket;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SealedObject;
+import javax.swing.JOptionPane;
+import seguridad.Seguridad;
+import utilities.Utilities;
+
 /**
  *
  * @author Diego
  */
 public class SignUpView extends javax.swing.JFrame {
 
+    private Socket servidor;
+    private PrivateKey clavePrivPropia;
+    private PublicKey clavePubAjena;
+
     /**
      * Creates new form SignUpView
      */
-    public SignUpView() {
+    public SignUpView(Socket servidor, PrivateKey clavePrivPropia, PublicKey clavePubAjena) {
         initComponents();
+        this.servidor = servidor;
+        this.clavePrivPropia = clavePrivPropia;
+        this.clavePubAjena = clavePubAjena;
     }
 
     /**
@@ -60,6 +88,11 @@ public class SignUpView extends javax.swing.JFrame {
         jLabel5.setText("Edad");
 
         btnSignUpBD.setText("Registrarse");
+        btnSignUpBD.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSignUpBDActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -132,17 +165,100 @@ public class SignUpView extends javax.swing.JFrame {
                 .addGap(24, 24, 24)
                 .addComponent(jLabel4)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(cmbSexo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(spnEdad, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel5))
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(cmbSexo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel5)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 49, Short.MAX_VALUE)
                 .addComponent(btnSignUpBD)
                 .addGap(35, 35, 35))
         );
 
         pack();
+        setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnSignUpBDActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSignUpBDActionPerformed
+        if (comprobarVacios()) {
+            System.out.println("ENVIO MODO SIGN UP");
+            Utilities.enviarOrden(CodeResponse.SIGNUP_CODE, clavePubAjena, servidor);
+
+            String id = UUID.randomUUID().toString();
+            enviarUsuario(id);
+
+            if (Utilities.recibirOrden(servidor, clavePrivPropia) != CodeResponse.ERROR_CODE) {
+                enviarPerfil(id);
+                if (Utilities.recibirOrden(servidor, clavePrivPropia) != CodeResponse.ERROR_CODE) {
+                    Utilities.showMessage("Registrado correctamente", "REGISTRO CORRECTO", JOptionPane.PLAIN_MESSAGE);
+                    this.dispose();
+                } else {
+                    Utilities.showMessage("El email ya existe", "ERROR REGISTRO", JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                Utilities.showMessage("El email ya existe", "ERROR REGISTRO", JOptionPane.ERROR_MESSAGE);
+            }
+        } else {
+            Utilities.showMessage("Rellenar todos los campo", "ERROR REGISTRO", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_btnSignUpBDActionPerformed
+
+    private boolean comprobarVacios() {
+        String email = txtEmail.getText();
+        String name = txtNombre.getText();
+        String password = new String(txtPwdSignUp.getPassword());
+        String username = txtUsuario.getText();
+        return !email.isEmpty() && !name.isEmpty() && !password.isEmpty() && !username.isEmpty() && cmbSexo.getSelectedIndex() != -1;
+    }
+
+    private Usuario crearUsuario(String id) {
+        Usuario u = null;
+        try {
+            String email = txtEmail.getText();
+            String name = txtNombre.getText();
+            String password = new String(txtPwdSignUp.getPassword());
+            String resumenPwd = new String(Seguridad.resumirPwd(password));
+
+            u = new Usuario(id, name, email, resumenPwd, false, ConstantesRoles.ROL_USER);
+
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(LoginView.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return u;
+    }
+
+    private Perfil crearPerfil(String id) {
+        String username = txtUsuario.getText();
+        String sexo = (String) cmbSexo.getSelectedItem();
+        int edad = (int) spnEdad.getValue();
+
+        return new Perfil(id, username, sexo, edad);
+
+    }
+
+    private void enviarPerfil(String id) {
+        try {
+            Perfil p = crearPerfil(id);
+            SealedObject so = Seguridad.cifrar(clavePubAjena, p);
+            Comunicacion.enviarObjeto(servidor, so);
+            System.out.println("ENVIO PERFIL DESDE SIGN UP");
+
+        } catch (IOException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException ex) {
+            Logger.getLogger(LoginView.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void enviarUsuario(String id) {
+        try {
+            Usuario u = crearUsuario(id);
+            SealedObject so = Seguridad.cifrar(clavePubAjena, u);
+            Comunicacion.enviarObjeto(servidor, so);
+            System.out.println("ENVIO USUARIO DESDE SIGN UP");
+
+        } catch (IOException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException ex) {
+            Logger.getLogger(LoginView.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel Contraseña;
@@ -159,4 +275,5 @@ public class SignUpView extends javax.swing.JFrame {
     private javax.swing.JPasswordField txtPwdSignUp;
     private javax.swing.JTextField txtUsuario;
     // End of variables declaration//GEN-END:variables
+
 }
