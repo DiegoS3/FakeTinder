@@ -66,9 +66,14 @@ public class HiloLogin extends Thread {
         Usuario logeado = ControladorUser.comprobarLogin(userLogin.getEmail(), userLogin.getPassword());
 
         if (logeado != null) {
-            Utilities.enviarOrden(CodeResponse.LOGIN_CORRECTO_CODE, clavePubAjena, cliente);
-            enviar(logeado);
-            comprobarPrefs(logeado.getId());
+            if (logeado.isActivado()) {
+                Utilities.enviarOrden(CodeResponse.LOGIN_CORRECTO_CODE, clavePubAjena, cliente);
+                enviar(logeado);
+                comprobarPrefs(logeado.getId());
+            }else{
+                Utilities.enviarOrden(CodeResponse.LOGIN_NO_ACTIVADO_CODE, clavePubAjena, cliente);
+            }
+
         } else {
             Utilities.enviarOrden(CodeResponse.ERROR_CODE, clavePubAjena, cliente);
         }

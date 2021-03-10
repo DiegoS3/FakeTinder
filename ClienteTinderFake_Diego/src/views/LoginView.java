@@ -191,7 +191,8 @@ public class LoginView extends javax.swing.JFrame {
         enviarUsuario();
 
         System.out.println("RECIBO RESPUESTA SERVIDOR AL LOGIN");
-        if (Utilities.recibirOrden(servidor, clavePrivPropia) != CodeResponse.ERROR_CODE) {
+        short respuesta = Utilities.recibirOrden(servidor, clavePrivPropia);
+        if (respuesta == CodeResponse.LOGIN_CORRECTO_CODE) {
             System.out.println("LOGIN CORRECTO");
             Usuario userLogeado = (Usuario) recibirObjeto(); //recibe usuario logueado
 
@@ -200,7 +201,7 @@ public class LoginView extends javax.swing.JFrame {
             //existen preferencias
             if (Utilities.recibirOrden(servidor, clavePrivPropia) == CodeResponse.PREFS_EXSTEN_CODE) {
                 prefs = (Preferencia) recibirObjeto(); //preferencias del usuario logueado
-
+                
                 MainView main = new MainView(servidor, clavePrivPropia, clavePubAjena, userLogeado, prefs);
                 main.setVisible(true);
                 this.dispose();
@@ -214,7 +215,10 @@ public class LoginView extends javax.swing.JFrame {
             }
 
             //iniciar menu principal, pasanddo usuario, claves y servidor
-        } else {
+        }else if(respuesta == CodeResponse.LOGIN_NO_ACTIVADO_CODE){
+            Utilities.showMessage("Cuenta no activada, en brevas lo hara un administrador", "ERROR LOGIN", JOptionPane.INFORMATION_MESSAGE);
+        } 
+        else {
             Utilities.showMessage("Email o Contraseña incorrectos", "ERROR LOGIN", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_btnLoginActionPerformed
@@ -246,7 +250,7 @@ public class LoginView extends javax.swing.JFrame {
 
         try {
             SealedObject so = (SealedObject) Comunicacion.recibirObjeto(servidor);
-            u = (Usuario) Seguridad.descifrar(clavePrivPropia, so);
+            u = (Object) Seguridad.descifrar(clavePrivPropia, so);
             System.out.println("RECIBIDO OBJETO DESDE SERVIDOR");
 
         } catch (IOException | ClassNotFoundException | NoSuchAlgorithmException

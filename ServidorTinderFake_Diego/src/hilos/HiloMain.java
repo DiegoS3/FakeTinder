@@ -59,6 +59,7 @@ public class HiloMain extends Thread {
             boolean activo = true;
             SealedObject so = null;
             do {
+                System.out.println("ESPERANDO ORDEN DEL CLIENTE");
                 so = (SealedObject) Comunicacion.recibirObjeto(cliente);
                 short orden = (short) Seguridad.descifrar(clavePrivPropia, so);
 
@@ -85,6 +86,13 @@ public class HiloMain extends Thread {
                         HiloPreferencias hp = new HiloPreferencias(cliente, clavePubAjena, clavePrivPropia);
                         activo = false;
                         hp.start();
+                        break;
+                        
+                    case CodeResponse.ADMIN_CODE:
+                        System.out.println("MODO ADMIN");
+                        HiloRolAdmin hra = new HiloRolAdmin(cliente, clavePubAjena, clavePrivPropia);
+                        activo = false;
+                        hra.start();
                         break;
                 }
             } while (activo);

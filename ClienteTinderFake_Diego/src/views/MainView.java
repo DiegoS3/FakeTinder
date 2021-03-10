@@ -5,16 +5,27 @@
  */
 package views;
 
+import codigos.CodeResponse;
 import comunicacion.Comunicacion;
 import constantes.ConstantesRoles;
 import datos.Preferencia;
 import datos.Usuario;
 import java.io.IOException;
 import java.net.Socket;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SealedObject;
 import javax.swing.table.DefaultTableModel;
+import seguridad.Seguridad;
+import utilities.Utilities;
 
 /**
  *
@@ -195,14 +206,15 @@ public class MainView extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(37, 37, 37)
+                        .addGap(33, 33, 33)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(btnPrefes, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnMsg, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnPerfil, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnAdmin, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnSalir, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(37, 37, 37)
+                            .addComponent(btnMsg, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnPrefes, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnPerfil, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(btnSalir, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(btnAdmin, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(28, 28, 28)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addComponent(btnAddUser, javax.swing.GroupLayout.PREFERRED_SIZE, 93, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -269,23 +281,23 @@ public class MainView extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnAscRolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAscRolActionPerformed
-        
+
     }//GEN-LAST:event_btnAscRolActionPerformed
 
     private void btnAddUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddUserActionPerformed
-        
+
     }//GEN-LAST:event_btnAddUserActionPerformed
 
     private void btnActiveUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnActiveUserActionPerformed
-        
+
     }//GEN-LAST:event_btnActiveUserActionPerformed
 
     private void btnDelUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelUserActionPerformed
-        
+
     }//GEN-LAST:event_btnDelUserActionPerformed
 
     private void btnDescRolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDescRolActionPerformed
-        
+
     }//GEN-LAST:event_btnDescRolActionPerformed
 
 
@@ -309,37 +321,61 @@ public class MainView extends javax.swing.JFrame {
 
     private void initRol() {
         if (userLogeado.getRol().equals(ConstantesRoles.ROL_ADMIN)) {
-            cargarTabla();
+            initRolAdmin();
         } else {
             btnAdmin.setVisible(false);
         }
     }
 
-    private void cargarTabla() {
+    private void initRolAdmin() {
         try {
-            ArrayList<Usuario> users = (ArrayList<Usuario>) Comunicacion.recibirObjeto(servidor);
-            System.out.println("RECIBIDA LISTA USERS");
+            Utilities.enviarOrden(CodeResponse.ADMIN_CODE, clavePubAjena, servidor);
+            SealedObject so = Seguridad.cifrar(clavePubAjena, userLogeado.getId());
+            Comunicacion.enviarObjeto(servidor, so);
+            cargarTabla();
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException
+                | InvalidKeyException | IOException | IllegalBlockSizeException ex) {
+        }
+    }
 
-            DefaultTableModel modeloTabla = (DefaultTableModel) this.tbUsers.getModel();
-            while (modeloTabla.getRowCount() > 0) {
-                modeloTabla.removeRow(0);
-            }
-            Object[] o = new Object[4];
+    private ArrayList<Usuario> rellenarLista() {
+        ArrayList<Usuario> listaUsersNoCifrados = new ArrayList<>();
+        
+        try {
+            ArrayList<SealedObject> users = (ArrayList<SealedObject>) Comunicacion.recibirObjeto(servidor);
+            System.out.println("RECIBIDA LISTA USERS CIFRADOS");
+            
             for (int i = 0; i < users.size(); i++) {
-                Usuario u = users.get(i);
-                o[0] = u.getNombre();
-                o[1] = u.getEmail();
-                o[2] = activado(u.isActivado());
-                o[3] = u.getRol();
-
-                modeloTabla.addRow(o);
+                Usuario u = (Usuario) Seguridad.descifrar(clavePrivPropia, users.get(i));
+                listaUsersNoCifrados.add(u);
             }
-
-            this.tbUsers.setModel(modeloTabla);
-            this.tbUsers.setDefaultEditor(Object.class, null);
-        } catch (IOException | ClassNotFoundException ex) {
+            
+        } catch (IOException | ClassNotFoundException | NoSuchAlgorithmException | NoSuchPaddingException 
+                | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
             ex.printStackTrace();
         }
+        
+        return listaUsersNoCifrados;
+    }
+
+    private void cargarTabla() {
+        ArrayList<Usuario> listaUsuarios = rellenarLista();
+        DefaultTableModel modeloTabla = (DefaultTableModel) this.tbUsers.getModel();
+        while (modeloTabla.getRowCount() > 0) {
+            modeloTabla.removeRow(0);
+        }
+        Object[] o = new Object[4];
+        for (int i = 0; i < listaUsuarios.size(); i++) {
+            Usuario u = listaUsuarios.get(i);
+            o[0] = u.getNombre();
+            o[1] = u.getEmail();
+            o[2] = activado(u.isActivado());
+            o[3] = u.getRol();
+
+            modeloTabla.addRow(o);
+        }
+        this.tbUsers.setModel(modeloTabla);
+        this.tbUsers.setDefaultEditor(Object.class, null);
     }
 
     private String activado(boolean acti) {

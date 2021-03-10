@@ -13,6 +13,7 @@ public class CodeResponse {
     //Codigos Login
     public static final short LOGIN_CODE = 1;   
     public static final short LOGIN_CORRECTO_CODE = 2;   
+    public static final short LOGIN_NO_ACTIVADO_CODE = 16;   
     
     //Codigo Sign UP
     public static final short SIGNUP_CODE = 3; 

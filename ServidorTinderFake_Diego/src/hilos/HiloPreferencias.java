@@ -58,6 +58,9 @@ public class HiloPreferencias extends Thread {
                 }
                 break;
         }
+        
+        HiloMain hm = new HiloMain(clavePubAjena, clavePrivPropia, cliente);
+        hm.start();
     }
 
     private Object recibirDato() {

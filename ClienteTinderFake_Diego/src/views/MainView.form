@@ -46,15 +46,17 @@
               <Group type="102" attributes="0">
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Group type="102" attributes="0">
-                          <EmptySpace min="-2" pref="37" max="-2" attributes="0"/>
+                          <EmptySpace min="-2" pref="33" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="btnPrefes" alignment="0" min="-2" pref="94" max="-2" attributes="0"/>
-                              <Component id="btnMsg" alignment="0" min="-2" pref="94" max="-2" attributes="0"/>
-                              <Component id="btnPerfil" alignment="0" min="-2" pref="94" max="-2" attributes="0"/>
-                              <Component id="btnAdmin" alignment="0" min="-2" pref="94" max="-2" attributes="0"/>
-                              <Component id="btnSalir" alignment="0" min="-2" pref="94" max="-2" attributes="0"/>
+                              <Component id="btnMsg" alignment="0" min="-2" pref="107" max="-2" attributes="0"/>
+                              <Component id="btnPrefes" min="-2" pref="107" max="-2" attributes="0"/>
+                              <Component id="btnPerfil" alignment="0" min="-2" pref="107" max="-2" attributes="0"/>
+                              <Group type="103" alignment="1" groupAlignment="0" attributes="0">
+                                  <Component id="btnSalir" alignment="0" min="-2" pref="107" max="-2" attributes="0"/>
+                                  <Component id="btnAdmin" min="-2" pref="107" max="-2" attributes="0"/>
+                              </Group>
                           </Group>
-                          <EmptySpace min="-2" pref="37" max="-2" attributes="0"/>
+                          <EmptySpace min="-2" pref="28" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" max="-2" attributes="0">
                               <Group type="102" attributes="0">
                                   <Component id="btnAddUser" min="-2" pref="93" max="-2" attributes="0"/>
