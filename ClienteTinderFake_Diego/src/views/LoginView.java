@@ -8,6 +8,7 @@ package views;
 import codigos.CodeResponse;
 import comunicacion.Comunicacion;
 import constantes.Constantes;
+import datos.Preferencia;
 import datos.Usuario;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -188,13 +189,32 @@ public class LoginView extends javax.swing.JFrame {
         Utilities.enviarOrden(CodeResponse.LOGIN_CODE, clavePubAjena, servidor);
 
         enviarUsuario();
-        
+
         System.out.println("RECIBO RESPUESTA SERVIDOR AL LOGIN");
         if (Utilities.recibirOrden(servidor, clavePrivPropia) != CodeResponse.ERROR_CODE) {
             System.out.println("LOGIN CORRECTO");
-            Usuario userLogeado = recibirUsuario();
+            Usuario userLogeado = (Usuario) recibirObjeto(); //recibe usuario logueado
+
+            Preferencia prefs = null;
+
+            //existen preferencias
+            if (Utilities.recibirOrden(servidor, clavePrivPropia) == CodeResponse.PREFS_EXSTEN_CODE) {
+                prefs = (Preferencia) recibirObjeto(); //preferencias del usuario logueado
+
+                MainView main = new MainView(servidor, clavePrivPropia, clavePubAjena, userLogeado, prefs);
+                main.setVisible(true);
+                this.dispose();
+
+            } else {
+                prefs = (Preferencia) recibirObjeto();
+                Utilities.enviarOrden(CodeResponse.PREFS_CODE, clavePubAjena, servidor);
+                PreferencesView prefsv = new PreferencesView(servidor, clavePrivPropia, clavePubAjena, userLogeado, prefs);
+                prefsv.setVisible(true);
+                this.dispose();
+            }
+
             //iniciar menu principal, pasanddo usuario, claves y servidor
-        }else{
+        } else {
             Utilities.showMessage("Email o Contraseña incorrectos", "ERROR LOGIN", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_btnLoginActionPerformed
@@ -208,39 +228,39 @@ public class LoginView extends javax.swing.JFrame {
     private Usuario crearUsuario() {
         Usuario u = null;
         try {
-            
+
             String email = txtUser.getText();
             String password = new String(txtPwd.getPassword());
             String resumenPwd = new String(Seguridad.resumirPwd(password));
             u = new Usuario(email, resumenPwd);
-            
+
         } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(LoginView.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         return u;
     }
-    
-    private Usuario recibirUsuario(){
-        Usuario u = null;
-        
+
+    private Object recibirObjeto() {
+        Object u = null;
+
         try {
             SealedObject so = (SealedObject) Comunicacion.recibirObjeto(servidor);
             u = (Usuario) Seguridad.descifrar(clavePrivPropia, so);
-            System.out.println("RECIBIDO USUARIO DESDE SERVIDOR " + u.getEmail());
-            
-        } catch (IOException | ClassNotFoundException | NoSuchAlgorithmException | 
-                NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
+            System.out.println("RECIBIDO OBJETO DESDE SERVIDOR");
+
+        } catch (IOException | ClassNotFoundException | NoSuchAlgorithmException
+                | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
         }
-        
+
         return u;
     }
-    
+
     private void enviarUsuario() {
         try {
-            
+
             Usuario u = crearUsuario();
-            
+
             SealedObject so = Seguridad.cifrar(clavePubAjena, u);
             Comunicacion.enviarObjeto(servidor, so);
             System.out.println("ENVIO USUARIO QUE INTENTA LOGUEAR");

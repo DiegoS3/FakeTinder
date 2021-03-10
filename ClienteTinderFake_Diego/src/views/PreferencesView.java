@@ -5,17 +5,71 @@
  */
 package views;
 
+import codigos.CodeResponse;
+import comunicacion.Comunicacion;
+import constantes.ConstantesPreferencias;
+import datos.Preferencia;
+import datos.Usuario;
+import java.io.IOException;
+import java.net.Socket;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SealedObject;
+import javax.swing.ButtonGroup;
+import javax.swing.JOptionPane;
+import seguridad.Seguridad;
+import utilities.Utilities;
+
 /**
  *
  * @author Diego
  */
 public class PreferencesView extends javax.swing.JFrame {
 
+    private Socket servidor;
+    private PrivateKey clavePrivPropia;
+    private PublicKey clavePubAjena;
+    private Usuario userLogeado;
+    private Preferencia prefsUser;
+
+    private ButtonGroup btnGRelacion = new ButtonGroup();
+    private ButtonGroup btnGTenerHijos = new ButtonGroup();
+    private ButtonGroup btnGQuererHijos = new ButtonGroup();
+
     /**
      * Creates new form PreferencesView
      */
-    public PreferencesView() {
+    public PreferencesView(Socket servidor, PrivateKey clavePrivPropia, PublicKey clavePubAjena, Usuario u, Preferencia p) {
         initComponents();
+        this.servidor = servidor;
+        this.clavePrivPropia = clavePrivPropia;
+        this.clavePubAjena = clavePubAjena;
+        this.userLogeado = u;
+        this.prefsUser = p;
+        init();
+    }
+
+    private void init() {
+        crearButtonGroups();
+        mostrarPrefs();
+    }
+
+    private void crearButtonGroups() {
+
+        btnGRelacion.add(ckbRelationSeria);
+        btnGRelacion.add(ckbRelationEsporadica);
+
+        btnGTenerHijos.add(ckbNoTieneHijos);
+        btnGTenerHijos.add(ckbTieneHijos);
+
+        btnGQuererHijos.add(ckbQuiereHijos);
+        btnGQuererHijos.add(ckbNoQuiereHijos);
     }
 
     /**
@@ -30,7 +84,7 @@ public class PreferencesView extends javax.swing.JFrame {
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
-        btnConfirmPrefs1 = new newscomponents.RSButtonIcon_new();
+        btnCreatePrefs = new newscomponents.RSButtonIcon_new();
         jLabel4 = new javax.swing.JLabel();
         ckbRelationEsporadica = new RSMaterialComponent.RSCheckBoxMaterial();
         ckbRelationSeria = new RSMaterialComponent.RSCheckBoxMaterial();
@@ -67,13 +121,13 @@ public class PreferencesView extends javax.swing.JFrame {
         jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel2.setText("TINDER FAKE");
 
-        btnConfirmPrefs1.setBackground(new java.awt.Color(65, 123, 67));
-        btnConfirmPrefs1.setText("Confirmar");
-        btnConfirmPrefs1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        btnConfirmPrefs1.setIcons(rojeru_san.efectos.ValoresEnum.ICONS.ARROW_FORWARD);
-        btnConfirmPrefs1.addActionListener(new java.awt.event.ActionListener() {
+        btnCreatePrefs.setBackground(new java.awt.Color(65, 123, 67));
+        btnCreatePrefs.setText("Confirmar");
+        btnCreatePrefs.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        btnCreatePrefs.setIcons(rojeru_san.efectos.ValoresEnum.ICONS.ARROW_FORWARD);
+        btnCreatePrefs.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnConfirmPrefs1ActionPerformed(evt);
+                btnCreatePrefsActionPerformed(evt);
             }
         });
 
@@ -261,7 +315,7 @@ public class PreferencesView extends javax.swing.JFrame {
                 .addContainerGap())
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(259, 259, 259)
-                .addComponent(btnConfirmPrefs1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(btnCreatePrefs, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -319,7 +373,7 @@ public class PreferencesView extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(rSLabelTextIcon1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(18, 18, 18)
-                .addComponent(btnConfirmPrefs1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(btnCreatePrefs, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(30, 30, 30))
         );
 
@@ -335,17 +389,92 @@ public class PreferencesView extends javax.swing.JFrame {
         );
 
         pack();
+        setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnConfirmPrefs1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConfirmPrefs1ActionPerformed
+    private void btnCreatePrefsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCreatePrefsActionPerformed
+        try {
+            if (comprobarForm()) {
+                Preferencia nP = crearPrefs();
+                //Ciframos y enviamos preferencias
+                SealedObject so = Seguridad.cifrar(clavePubAjena, nP);
+                Comunicacion.enviarObjeto(servidor, so);
 
-       
-    }//GEN-LAST:event_btnConfirmPrefs1ActionPerformed
+                if (this.prefsUser != null) {
+                    //enviamos codigo actu pref
+                    Utilities.enviarOrden(CodeResponse.PREFS_ACTUALIZAR_CODE, clavePubAjena, servidor);
+                    correcto(nP);
+                } else {
+                    //enviamos codigo crear pref
+                    Utilities.enviarOrden(CodeResponse.PREFS_CREAR_CODE, clavePubAjena, servidor);
+                    correcto(nP);
+                }
+            }
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IOException | IllegalBlockSizeException ex) {
+            Logger.getLogger(PreferencesView.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_btnCreatePrefsActionPerformed
+
+    private void correcto(Preferencia nP) {
+        short res = Utilities.recibirOrden(servidor, clavePrivPropia);
+        if (res == CodeResponse.PREFS_CORRECTO_CODE) {
+            Utilities.showMessage("Se han creado con exito", "EXITO PREFERENCIAS", JOptionPane.PLAIN_MESSAGE);
+            MainView main = new MainView(servidor, clavePrivPropia, clavePubAjena, userLogeado, nP);
+            main.setVisible(true);
+            this.dispose();
+        } else {
+            Utilities.showMessage("Error al crear preferencias", "ERROR PREFERENCIAS", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void mostrarPrefs() {
+        if (this.prefsUser != null) {
+            //las muestro en pantalla
+            String relacion = this.prefsUser.getTiporelacion();
+            String interes = this.prefsUser.getInteres();
+            boolean quiereHijos = this.prefsUser.isQhijos();
+            boolean tieneHijos = this.prefsUser.isThijos();
+            int deporte = this.prefsUser.getDeporte();
+            int arte = this.prefsUser.getArte();
+            int politica = this.prefsUser.getPolitica();
+
+            cmbInteres.setSelectedItem(interes);
+            seleccionarRelacion(relacion);
+            seleccionarQHijos(quiereHijos);
+            seleccionarTHijos(tieneHijos);
+            sldArte.setValue(arte);
+            sldDeporte.setValue(deporte);
+            sldPolitica.setValue(politica);
+        }
+    }
+
+    private void seleccionarTHijos(boolean tieneHijos) {
+        if (tieneHijos) {
+            ckbTieneHijos.setSelected(true);
+        } else {
+            ckbNoTieneHijos.setSelected(true);
+        }
+    }
+
+    private void seleccionarQHijos(boolean quiereHijos) {
+        if (quiereHijos) {
+            ckbQuiereHijos.setSelected(true);
+        } else {
+            ckbNoQuiereHijos.setSelected(true);
+        }
+    }
+
+    private void seleccionarRelacion(String relacion) {
+        if (relacion.equals(ConstantesPreferencias.RELACION_ESPO)) {
+            ckbRelationEsporadica.setSelected(true);
+        } else {
+            ckbRelationSeria.setSelected(true);
+        }
+    }
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private newscomponents.RSButtonIcon_new btnConfirmPrefs;
-    private newscomponents.RSButtonIcon_new btnConfirmPrefs1;
+    private newscomponents.RSButtonIcon_new btnCreatePrefs;
     private RSMaterialComponent.RSCheckBoxMaterial ckbNoQuiereHijos;
     private RSMaterialComponent.RSCheckBoxMaterial ckbNoTieneHijos;
     private RSMaterialComponent.RSCheckBoxMaterial ckbQuiereHijos;
@@ -375,7 +504,62 @@ public class PreferencesView extends javax.swing.JFrame {
     private javax.swing.JSlider sldDeporte;
     private javax.swing.JSlider sldPolitica;
     // End of variables declaration//GEN-END:variables
-    
-    
 
+    private Preferencia crearPrefs() {
+        String relacion = obtenerRelacion();
+        String interes = String.valueOf(cmbInteres.getSelectedItem());
+        boolean quiereHijos = obtenerQHijos();
+        boolean tieneHijos = obtenerTHijos();
+        int deporte = sldDeporte.getValue();
+        int arte = sldArte.getValue();
+        int politica = sldPolitica.getValue();
+
+        return new Preferencia(userLogeado.getId(), relacion, interes, arte, deporte, politica, tieneHijos, quiereHijos);
+    }
+
+    private boolean comprobarForm() {
+        boolean correcto = false;
+
+        if (btnGRelacion.getSelection() != null && btnGQuererHijos.getSelection() != null
+                && btnGTenerHijos.getSelection() != null && cmbInteres.getSelectedIndex() != 0) {
+
+            correcto = true;
+
+        } else {
+            Utilities.showMessage("Rellenar todos los campo", "ERROR PREFERENCIAS", JOptionPane.ERROR_MESSAGE);
+        }
+
+        return correcto;
+    }
+
+    private boolean obtenerQHijos() {
+        boolean quiereHijos = false;
+
+        if (ckbQuiereHijos.isSelected()) {
+            quiereHijos = true;
+        }
+
+        return quiereHijos;
+    }
+
+    private boolean obtenerTHijos() {
+        boolean tieneHijos = false;
+
+        if (ckbTieneHijos.isSelected()) {
+            tieneHijos = true;
+        }
+
+        return tieneHijos;
+    }
+
+    private String obtenerRelacion() {
+        String relacion;
+        if (ckbRelationSeria.isSelected()) {
+            relacion = ConstantesPreferencias.RELACION_SERIA;
+        } else {
+            relacion = ConstantesPreferencias.RELACION_ESPO;
+        }
+
+        return relacion;
+    }
 }

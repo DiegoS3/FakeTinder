@@ -79,6 +79,13 @@ public class HiloMain extends Thread {
                         activo = false;
                         hs.start();
                         break;
+                        
+                    case CodeResponse.PREFS_CODE:
+                        System.out.println("MODO PREFERENCIAS");
+                        HiloPreferencias hp = new HiloPreferencias(cliente, clavePubAjena, clavePrivPropia);
+                        activo = false;
+                        hp.start();
+                        break;
                 }
             } while (activo);
 

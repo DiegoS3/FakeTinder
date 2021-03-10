@@ -5,17 +5,34 @@
  */
 package views;
 
+import datos.Preferencia;
+import datos.Usuario;
+import java.net.Socket;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+
 /**
  *
  * @author Diego
  */
 public class MainView extends javax.swing.JFrame {
 
+    private Socket servidor;
+    private PrivateKey clavePrivPropia;
+    private PublicKey clavePubAjena;
+    private Usuario userLogeado;
+    private Preferencia prefsUserLog;
+
     /**
      * Creates new form MainView
      */
-    public MainView() {
+    public MainView(Socket servidor, PrivateKey clavePrivPropia, PublicKey clavePubAjena, Usuario u, Preferencia p) {
         initComponents();
+        this.servidor = servidor;
+        this.clavePrivPropia = clavePrivPropia;
+        this.clavePubAjena = clavePubAjena;
+        this.userLogeado = u;
+        this.prefsUserLog = p;
     }
 
     /**
@@ -110,7 +127,6 @@ public class MainView extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-   
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAdmin;

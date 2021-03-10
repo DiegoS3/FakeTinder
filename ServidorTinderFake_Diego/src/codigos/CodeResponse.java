@@ -18,6 +18,14 @@ public class CodeResponse {
     public static final short SIGNUP_CODE = 3; 
     public static final short SIGNUP_CORRECTO_CODE = 4;   
     
+    //Codigo Prefrencias
+    public static final short PREFS_CODE = 5; 
+    public static final short PREFS_EXSTEN_CODE = 6;   
+    public static final short PREFS_ACTUALIZAR_CODE = 7;   
+    public static final short PREFS_CREAR_CODE = 8;  
+    public static final short PREFS_CORRECTO_CODE = 9;   
+    
+    
     
     
 }
