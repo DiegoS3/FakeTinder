@@ -46,7 +46,7 @@ public class HiloMain extends Thread {
 
     @Override
     public void run() {
-
+         System.out.println("ME INICIO HILO MAIN");
         try {
 
             if (clavePubAjena == null) {
@@ -98,7 +98,9 @@ public class HiloMain extends Thread {
                     case CodeResponse.PERFIL_CODE:
                         System.out.println("MODO PERFIL");
                 }
+                System.out.println("HILO MAIN ACTIVO " + activo);
             } while (activo);
+            System.out.println("HE MUERTO HILO MAIN");
 
         } catch (IOException | ClassNotFoundException | NoSuchAlgorithmException | NoSuchPaddingException
                 | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {

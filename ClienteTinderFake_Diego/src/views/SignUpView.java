@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SealedObject;
+import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import seguridad.Seguridad;
 import utilities.Utilities;
@@ -35,6 +36,7 @@ public class SignUpView extends javax.swing.JFrame {
     private Socket servidor;
     private PrivateKey clavePrivPropia;
     private PublicKey clavePubAjena;
+    private JDialog dialog;
 
     /**
      * Creates new form SignUpView
@@ -44,6 +46,14 @@ public class SignUpView extends javax.swing.JFrame {
         this.servidor = servidor;
         this.clavePrivPropia = clavePrivPropia;
         this.clavePubAjena = clavePubAjena;
+    }
+
+    public SignUpView(Socket servidor, PrivateKey clavePrivPropia, PublicKey clavePubAjena, JDialog dialog) {
+        initComponents();
+        this.servidor = servidor;
+        this.clavePrivPropia = clavePrivPropia;
+        this.clavePubAjena = clavePubAjena;
+        this.dialog = dialog;
     }
 
     /**
@@ -191,7 +201,12 @@ public class SignUpView extends javax.swing.JFrame {
                 enviarPerfil(id);
                 if (Utilities.recibirOrden(servidor, clavePrivPropia) != CodeResponse.ERROR_CODE) {
                     Utilities.showMessage("Registrado correctamente", "REGISTRO CORRECTO", JOptionPane.PLAIN_MESSAGE);
-                    this.dispose();
+                    if (dialog != null) {
+                        dialog.dispose();
+                    } else {
+
+                        this.dispose();
+                    }
                 } else {
                     Utilities.showMessage("El email ya existe", "ERROR REGISTRO", JOptionPane.ERROR_MESSAGE);
                 }
@@ -233,7 +248,6 @@ public class SignUpView extends javax.swing.JFrame {
         int edad = (int) spnEdad.getValue();
 
         return new Perfil(id, username, sexo, edad);
-
     }
 
     private void enviarPerfil(String id) {
@@ -244,7 +258,7 @@ public class SignUpView extends javax.swing.JFrame {
             System.out.println("ENVIO PERFIL DESDE SIGN UP");
 
         } catch (IOException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException ex) {
-            Logger.getLogger(LoginView.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
         }
     }
 
@@ -256,7 +270,7 @@ public class SignUpView extends javax.swing.JFrame {
             System.out.println("ENVIO USUARIO DESDE SIGN UP");
 
         } catch (IOException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException ex) {
-            Logger.getLogger(LoginView.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
         }
     }
 

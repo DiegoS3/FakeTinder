@@ -74,7 +74,7 @@ public class LoginView extends javax.swing.JFrame {
             this.clavePubAjena = (PublicKey) Comunicacion.recibirObjeto(servidor);
 
         } catch (IOException | ClassNotFoundException ex) {
-            Logger.getLogger(LoginView.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
         }
     }
 
@@ -226,7 +226,6 @@ public class LoginView extends javax.swing.JFrame {
     private void btnSignUpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSignUpActionPerformed
         SignUpView signup = new SignUpView(servidor, clavePrivPropia, clavePubAjena);
         signup.setVisible(true);
-        this.dispose();
     }//GEN-LAST:event_btnSignUpActionPerformed
 
     private Usuario crearUsuario() {

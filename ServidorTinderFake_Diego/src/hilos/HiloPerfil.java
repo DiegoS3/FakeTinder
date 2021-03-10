@@ -24,7 +24,7 @@ public class HiloPerfil extends Thread{
 
     @Override
     public void run() {
-        super.run(); //To change body of generated methods, choose Tools | Templates.
+        
     }
     
 }

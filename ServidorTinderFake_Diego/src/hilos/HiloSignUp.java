@@ -47,7 +47,7 @@ public class HiloSignUp extends Thread {
 
     @Override
     public void run() {
-        System.out.println("DENTRO DEL REGISTRO");
+        System.out.println("ME INICIO HILO SIGN UP");
         comprobarSignUp();
         if (modoAdmin) {
             HiloRolAdmin hra = new HiloRolAdmin(cliente, clavePubAjena, clavePrivPropia);
@@ -57,6 +57,8 @@ public class HiloSignUp extends Thread {
             HiloMain hm = new HiloMain(clavePubAjena, clavePrivPropia, cliente);
             hm.start();
         }
+        
+        System.out.println("HE MUERTO HILO SIGN UP");
 
     }
 
@@ -75,7 +77,6 @@ public class HiloSignUp extends Thread {
             } else {
                 Utilities.enviarOrden(CodeResponse.ERROR_CODE, clavePubAjena, cliente);
             }
-
         } else {
             Utilities.enviarOrden(CodeResponse.ERROR_CODE, clavePubAjena, cliente);
         }
@@ -86,13 +87,14 @@ public class HiloSignUp extends Thread {
         Object u = null;
 
         try {
+            System.out.println("ENTRANDO EN RECIBIR OBJETO");
             SealedObject so = (SealedObject) Comunicacion.recibirObjeto(cliente);
             u = Seguridad.descifrar(clavePrivPropia, so);
             System.out.println("RECIBIDO OBJETO DEL CLIENTE SIGN UP");
 
         } catch (IOException | ClassNotFoundException | NoSuchAlgorithmException
                 | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
-            Logger.getLogger(HiloMain.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
         }
 
         return u;

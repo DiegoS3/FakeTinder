@@ -40,9 +40,11 @@ public class HiloLogin extends Thread {
 
     @Override
     public void run() {
+        System.out.println("ME INICIO HILO LOGIN");
         comprobarLogin();
         HiloMain hm = new HiloMain(clavePubAjena, clavePrivPropia, cliente);
         hm.start();
+        System.out.println("HE MUERTO HILO LOGIN");
     }
 
     private Usuario recibirUsuario() {
@@ -70,7 +72,7 @@ public class HiloLogin extends Thread {
                 Utilities.enviarOrden(CodeResponse.LOGIN_CORRECTO_CODE, clavePubAjena, cliente);
                 enviar(logeado);
                 comprobarPrefs(logeado.getId());
-            }else{
+            } else {
                 Utilities.enviarOrden(CodeResponse.LOGIN_NO_ACTIVADO_CODE, clavePubAjena, cliente);
             }
 

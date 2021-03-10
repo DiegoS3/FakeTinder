@@ -41,11 +41,13 @@ public class HiloRolAdmin extends Thread {
 
     @Override
     public void run() {
+        System.out.println("ME INICIO HILO ADMIN");
         boolean activo = true;
-        String idUser = (String) recibirDato();
+        //String idUser = (String) recibirDato();
         do {
             try {
-                enviarListaUsers(idUser);
+                enviarListaUsers();
+                System.out.println("ESPERANDO ORDEN HILO ADMIN");
                 short orden = Utilities.recibirOrden(cliente, clavePrivPropia);
                 SealedObject so = (SealedObject) Comunicacion.recibirObjeto(cliente);
                 String idUsuario = "";
@@ -90,12 +92,14 @@ public class HiloRolAdmin extends Thread {
                     | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
                 ex.printStackTrace();
             }
+            System.out.println(activo);
         } while (activo);
+        System.out.println("HE MUERTO HILO ADMIN");
     }
 
-    private void enviarListaUsers(String id) {
+    private void enviarListaUsers() {
         try {
-            ArrayList<Usuario> listaUsers = ControladorUser.obtenerUsuarios(id);
+            ArrayList<Usuario> listaUsers = ControladorUser.obtenerUsuarios();
             ArrayList<SealedObject> listaObjCifrados = new ArrayList<>();
             //Cifro cada objeto y lo meto en una lista para intentar que no de problemas
             //al cifrar un objeto mas pesado
@@ -122,9 +126,6 @@ public class HiloRolAdmin extends Thread {
             ex.printStackTrace();
         }
         return o;
-    }
-
-    private void addUser() {
     }
 
     private void activarUser(String idUsuario) {

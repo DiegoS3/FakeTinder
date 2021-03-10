@@ -38,6 +38,7 @@ public class HiloPreferencias extends Thread {
 
     @Override
     public void run() {
+         System.out.println("ME INICIO HILO PREFS");
         Preferencia prefs = (Preferencia) recibirDato();
         short orden = (short) recibirDato();
 
@@ -58,7 +59,7 @@ public class HiloPreferencias extends Thread {
                 }
                 break;
         }
-        
+        System.out.println("HE MUERTO HILO PREFERENCIAS");
         HiloMain hm = new HiloMain(clavePubAjena, clavePrivPropia, cliente);
         hm.start();
     }

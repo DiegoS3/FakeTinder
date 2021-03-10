@@ -157,7 +157,7 @@ public class ControladorUser {
         return exito;
     }
 
-    public synchronized static ArrayList<Usuario> obtenerUsuarios(String id) {
+    public synchronized static ArrayList<Usuario> obtenerUsuarios() {
 
         ArrayList<Usuario> listaUsers = new ArrayList<Usuario>();
         Connection conexion = abrirConexion();
@@ -165,7 +165,7 @@ public class ControladorUser {
         if (conexion != null) {
             try {
                 try (Statement st = (Statement) conexion.createStatement()) {
-                    sentencia = "SELECT * FROM " + ConstantesBD.TABLAUSUARIOS + " WHERE id != '" + id + "'";
+                    sentencia = "SELECT * FROM " + ConstantesBD.TABLAUSUARIOS ;
                     ResultSet rs = st.executeQuery(sentencia);
                     while (rs.next()) {
                         Usuario u = new Usuario();

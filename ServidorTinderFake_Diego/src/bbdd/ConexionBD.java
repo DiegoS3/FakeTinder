@@ -42,7 +42,6 @@ public class ConexionBD {
         try {
             conex.close();
             conex = null;
-            System.out.println("Desconectado de la Base de Datos"); // Opcional para seguridad
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(null, ex.getMessage(), "Error de Desconexion", JOptionPane.ERROR_MESSAGE);
         }

@@ -31,13 +31,13 @@ import utilities.Utilities;
  * @author Diego
  */
 public class AdminView extends javax.swing.JFrame {
-    
+
     private Socket servidor;
     private PrivateKey clavePrivPropia;
     private PublicKey clavePubAjena;
     private Usuario userLogeado;
     private ArrayList<Usuario> listaUsuarios;
-    
+
     /**
      * Creates new form AdminView
      */
@@ -47,7 +47,7 @@ public class AdminView extends javax.swing.JFrame {
         this.clavePrivPropia = clavePrivPropia;
         this.clavePubAjena = clavePubAjena;
         this.userLogeado = u;
-        initRolAdmin();
+        cargarTabla();
     }
 
     /**
@@ -248,7 +248,10 @@ public class AdminView extends javax.swing.JFrame {
 
     private void btnAddUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddUserActionPerformed
         //Utilities.enviarOrden(CodeResponse.ADD_CODE, clavePubAjena, servidor);
+        System.out.println("ENVIO MODO SIGN UP");
+        Utilities.enviarOrden(CodeResponse.SIGNUP_CODE, clavePubAjena, servidor);
         mostraSignUpDialog();
+        cargarTabla();
     }//GEN-LAST:event_btnAddUserActionPerformed
 
     private void btnActiveUserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnActiveUserActionPerformed
@@ -266,18 +269,7 @@ public class AdminView extends javax.swing.JFrame {
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         Utilities.enviarOrden(CodeResponse.ADMIN_FIN_CODE, clavePubAjena, servidor);
     }//GEN-LAST:event_formWindowClosing
-
-     private void initRolAdmin() {
-        try {
-            Utilities.enviarOrden(CodeResponse.ADMIN_CODE, clavePubAjena, servidor);
-            SealedObject so = Seguridad.cifrar(clavePubAjena, userLogeado.getId());
-            Comunicacion.enviarObjeto(servidor, so);
-            cargarTabla();
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException
-                | InvalidKeyException | IOException | IllegalBlockSizeException ex) {
-        }
-    }
-
+   
     private ArrayList<Usuario> rellenarLista() {
         ArrayList<Usuario> listaUsersNoCifrados = new ArrayList<>();
 
@@ -327,7 +319,7 @@ public class AdminView extends javax.swing.JFrame {
         }
         return estado;
     }
-    
+
     private Usuario getUserTable() {
         Usuario user = null;
 
@@ -336,6 +328,10 @@ public class AdminView extends javax.swing.JFrame {
         } else {
             int row = this.tbUsers.getSelectedRow();
             user = this.listaUsuarios.get(row);
+            if (user.getId().equals(userLogeado.getId())) {
+                Utilities.showMessage("No puedes modificarte a ti mismo", "ERROR", JOptionPane.ERROR_MESSAGE);
+                user = null;
+            }
         }
         return user;
     }
@@ -345,30 +341,36 @@ public class AdminView extends javax.swing.JFrame {
 
         if (uSelected != null) {
             try {
-                Utilities.enviarOrden(code, clavePubAjena, servidor);
-                SealedObject so = Seguridad.cifrar(clavePubAjena, uSelected.getId());
-                Comunicacion.enviarObjeto(servidor, so);
-
-                so = (SealedObject) Comunicacion.recibirObjeto(servidor);
-                short respuesta = (short) Seguridad.descifrar(clavePrivPropia, so);
-
-                if (respuesta == CodeResponse.ADMIN_EXITO_CODE) {
-                    Utilities.showMessage(exito, titulo, JOptionPane.PLAIN_MESSAGE);
+                if (code == CodeResponse.ACTIVAR_CODE && uSelected.isActivado()) {
+                    Utilities.showMessage("Este usuario ya esta activado", titulo, JOptionPane.ERROR_MESSAGE);
                 } else {
-                    Utilities.showMessage(error, titulo, JOptionPane.ERROR_MESSAGE);
-                }
+                    System.out.println("ENVIO ORDEN DESDE ADMIN VIEW");
+                    Utilities.enviarOrden(code, clavePubAjena, servidor);
+                    
+                    //Envio id usuario seleccionado para modificar
+                    SealedObject so = Seguridad.cifrar(clavePubAjena, uSelected.getId());
+                    Comunicacion.enviarObjeto(servidor, so);
+                    //recibo respuesta en base a mi peticion
+                    so = (SealedObject) Comunicacion.recibirObjeto(servidor);
+                    short respuesta = (short) Seguridad.descifrar(clavePrivPropia, so);
 
+                    if (respuesta == CodeResponse.ADMIN_EXITO_CODE) {
+                        Utilities.showMessage(exito, titulo, JOptionPane.PLAIN_MESSAGE);
+                        cargarTabla();
+                    } else {
+                        Utilities.showMessage(error, titulo, JOptionPane.ERROR_MESSAGE);
+                    }
+                }
             } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IOException
                     | IllegalBlockSizeException | ClassNotFoundException | BadPaddingException ex) {
                 ex.printStackTrace();
             }
         }
-        cargarTabla();
     }
 
-    private void mostraSignUpDialog() {
-        SignUpView signUp = new SignUpView(servidor, clavePrivPropia, clavePubAjena);
+    private void mostraSignUpDialog() {        
         final JDialog frame = new JDialog(this, "", true);
+        SignUpView signUp = new SignUpView(servidor, clavePrivPropia, clavePubAjena, frame);
         frame.getContentPane().add(signUp.getContentPane());
         frame.pack();
         frame.setLocationRelativeTo(this);

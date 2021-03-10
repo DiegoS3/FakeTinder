@@ -194,6 +194,7 @@ public class MainView extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnAdminActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAdminActionPerformed
+        Utilities.enviarOrden(CodeResponse.ADMIN_CODE, clavePubAjena, servidor);
         AdminView admin = new AdminView(servidor, clavePrivPropia, clavePubAjena, userLogeado);
         iniciarFrameDialog(admin);
     }//GEN-LAST:event_btnAdminActionPerformed
