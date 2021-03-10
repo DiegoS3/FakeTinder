@@ -9,6 +9,7 @@ public class CodeResponse {
     
     //Codigo de error
     public static final short ERROR_CODE = -1;
+    public static final short SALIR_CODE = 404;
     
     //Codigos Login
     public static final short LOGIN_CODE = 1;   
@@ -38,5 +39,6 @@ public class CodeResponse {
     
     //Codigo Perfil
     public static final short PERFIL_CODE = 19; 
+    public static final short PERFIL_ACTUALIZAR_CODE = 20; 
     
 }

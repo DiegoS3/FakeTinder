@@ -6,29 +6,15 @@
 package views;
 
 import codigos.CodeResponse;
-import comunicacion.Comunicacion;
 import constantes.ConstantesRoles;
-import datos.Perfil;
 import datos.Preferencia;
 import datos.Usuario;
-import java.io.IOException;
 import java.net.Socket;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SealedObject;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.table.DefaultTableModel;
-import seguridad.Seguridad;
 import utilities.Utilities;
 
 /**
@@ -43,6 +29,7 @@ public class MainView extends javax.swing.JFrame {
     private Usuario userLogeado;
     private Preferencia prefsUserLog;
     private ArrayList<Usuario> listaUsuarios;
+    private JDialog frame;
 
     /**
      * Creates new form MainView
@@ -200,28 +187,22 @@ public class MainView extends javax.swing.JFrame {
     }//GEN-LAST:event_btnAdminActionPerformed
 
     private void btnPrefesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPrefesActionPerformed
-        
+
         Utilities.enviarOrden(CodeResponse.PREFS_CODE, clavePubAjena, servidor);
         PreferencesView prf = new PreferencesView(servidor, clavePrivPropia, clavePubAjena, userLogeado, prefsUserLog);
         iniciarFrameDialog(prf);
     }//GEN-LAST:event_btnPrefesActionPerformed
 
     private void btnPerfilActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPerfilActionPerformed
-        try {
-            Utilities.enviarOrden(CodeResponse.PERFIL_CODE, clavePubAjena, servidor);
-            SealedObject so = (SealedObject) Comunicacion.recibirObjeto(servidor);
-            Perfil p =  (Perfil) Seguridad.descifrar(clavePrivPropia, so);
-            ProfileView prof = new ProfileView(servidor, clavePrivPropia, clavePubAjena, p);
-            iniciarFrameDialog(prof);
-            
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IOException | 
-                ClassNotFoundException | IllegalBlockSizeException | BadPaddingException ex) {
-            ex.printStackTrace();
-        }
+
+        Utilities.enviarOrden(CodeResponse.PERFIL_CODE, clavePubAjena, servidor);
+        ProfileView prof = new ProfileView(servidor, clavePrivPropia, clavePubAjena, userLogeado.getId(), frame);
+        iniciarFrameDialog(prof);
+
     }//GEN-LAST:event_btnPerfilActionPerformed
-    
-    private void iniciarFrameDialog(JFrame f){
-        final JDialog frame = new JDialog(this, "", true);
+
+    private void iniciarFrameDialog(JFrame f) {
+        frame = new JDialog(this, "", true);
         frame.getContentPane().add(f.getContentPane());
         frame.pack();
         frame.setLocationRelativeTo(this);

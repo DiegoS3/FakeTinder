@@ -12,4 +12,6 @@ public class ConstantesPreferencias {
     public static final String INTERES_HOM = "Hombres";
     public static final String INTERES_MUJ = "Mujeres";
     public static final String INTERES_AMB = "Ambos";
+    public static final String SEXO_M = "Masculino";
+    public static final String SEXO_F = "Femenino";
 }

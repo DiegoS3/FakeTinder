@@ -97,6 +97,10 @@ public class HiloMain extends Thread {
                         
                     case CodeResponse.PERFIL_CODE:
                         System.out.println("MODO PERFIL");
+                        HiloPerfil hpr = new HiloPerfil(cliente, clavePubAjena, clavePrivPropia);
+                        activo = false;
+                        hpr.start();
+                        break;
                 }
                 System.out.println("HILO MAIN ACTIVO " + activo);
             } while (activo);

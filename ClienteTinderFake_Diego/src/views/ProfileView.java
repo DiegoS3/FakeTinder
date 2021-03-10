@@ -5,31 +5,69 @@
  */
 package views;
 
+import codigos.CodeResponse;
+import comunicacion.Comunicacion;
 import datos.Perfil;
+import java.io.IOException;
 import java.net.Socket;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SealedObject;
+import javax.swing.JDialog;
+import javax.swing.JOptionPane;
+import seguridad.Seguridad;
+import utilities.Utilities;
 
 /**
  *
  * @author Diego
  */
 public class ProfileView extends javax.swing.JFrame {
-    
+
     private Socket servidor;
     private PrivateKey clavePrivPropia;
     private PublicKey clavePubAjena;
     private Perfil perfiluser;
-    
+    private String idUser;
+    private JDialog frame;
+
     /**
      * Creates new form ProfileView
      */
-    public ProfileView(Socket servidor, PrivateKey clavePrivPropia, PublicKey clavePubAjena, Perfil p) {
+    public ProfileView(Socket servidor, PrivateKey clavePrivPropia, PublicKey clavePubAjena, String id, JDialog frame) {
         initComponents();
         this.servidor = servidor;
         this.clavePrivPropia = clavePrivPropia;
         this.clavePubAjena = clavePubAjena;
-        this.perfiluser = p;
+        this.idUser = id;
+        this.frame = frame;
+        obtenerPerfil();
+    }
+
+    private void obtenerPerfil() {
+        try {
+            SealedObject so = Seguridad.cifrar(clavePubAjena, this.idUser);
+            Comunicacion.enviarObjeto(servidor, so);
+            so = (SealedObject) Comunicacion.recibirObjeto(servidor);
+            this.perfiluser = (Perfil) Seguridad.descifrar(clavePrivPropia, so);
+            mostrarPerfil();
+        } catch (IOException | ClassNotFoundException | NoSuchAlgorithmException | NoSuchPaddingException
+                | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void mostrarPerfil() {
+        txtUsuarioProf.setText(perfiluser.getUsername());
+        cmbSexoProf.setSelectedItem(perfiluser.getSexo());
+        spnEdadProf.setValue(perfiluser.getEdad());
     }
 
     /**
@@ -53,6 +91,11 @@ public class ProfileView extends javax.swing.JFrame {
         btnModProfile = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
 
         jLabel3.setText("Usuario");
 
@@ -146,8 +189,35 @@ public class ProfileView extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnModProfileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnModProfileActionPerformed
-        // TODO add your handling code here:
+
+        String username = txtUsuarioProf.getText();
+        String sexo = String.valueOf(cmbSexoProf.getSelectedItem());
+        int edad = (int) spnEdadProf.getValue();
+
+        if (!username.isEmpty()) {
+            try {
+                //Utilities.enviarOrden(CodeResponse.PERFIL_ACTUALIZAR_CODE, clavePubAjena, servidor);
+                Perfil newPerfil = new Perfil(this.perfiluser.getIduser(), username, sexo, edad);
+                SealedObject so = Seguridad.cifrar(clavePubAjena, newPerfil);
+                Comunicacion.enviarObjeto(servidor, so);
+                short respuesta = Utilities.recibirOrden(servidor, clavePrivPropia);
+                if (respuesta == CodeResponse.PERFIL_ACTUALIZAR_CODE) {
+                    Utilities.showMessage("Perfil actualizado correctamente", "ACTUALIZAR PERFIL", JOptionPane.PLAIN_MESSAGE);
+                    frame.dispose();
+                }else{
+                    Utilities.showMessage("Error al actualizar el perfil", "ACTUALIZAR PERFIL", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (IOException | NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException ex) {
+                ex.printStackTrace();
+            }
+        } else {
+            Utilities.showMessage("Rellena todos los campos", "ERROR", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_btnModProfileActionPerformed
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        Utilities.enviarOrden(CodeResponse.SALIR_CODE, clavePubAjena, servidor);
+    }//GEN-LAST:event_formWindowClosing
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

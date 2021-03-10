@@ -13,8 +13,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -92,7 +90,6 @@ public class HiloRolAdmin extends Thread {
                     | InvalidKeyException | IllegalBlockSizeException | BadPaddingException ex) {
                 ex.printStackTrace();
             }
-            System.out.println(activo);
         } while (activo);
         System.out.println("HE MUERTO HILO ADMIN");
     }

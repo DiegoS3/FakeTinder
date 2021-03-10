@@ -19,7 +19,7 @@ import java.sql.SQLException;
  * @author Diego
  */
 public class ControladorPerfil {
-
+    
     private static String sentencia;
 
     /**
@@ -27,19 +27,23 @@ public class ControladorPerfil {
      * @param id
      * @return
      */
-    public static boolean profileExists(String id) {
-        boolean exist = false;
+    public static Perfil selectProfile(String id) {
+        Perfil perfil = null;
         Connection conexion = abrirConexion();
-
+        
         if (conexion != null) {
-
+            
             try {
                 try (Statement st = (Statement) conexion.createStatement()) {
-                    sentencia = "SELECT * FROM " + ConstantesBD.TABLAPERFIL + " WHERE idUser = '" + id + "'";
-
+                    sentencia = "SELECT username, sexo, edad  FROM " + ConstantesBD.TABLAPERFIL + " WHERE idUser = '" + id + "'";
+                    
                     ResultSet rs = st.executeQuery(sentencia);
-                    if (rs.next()) {
-                        exist = true;
+                    while (rs.next()) {
+                        perfil = new Perfil();
+                        perfil.setIduser(id);
+                        perfil.setUsername(rs.getString(1));
+                        perfil.setSexo(rs.getString(2));
+                        perfil.setEdad(rs.getInt(3));
                     }
                 }
             } catch (SQLException e) {
@@ -48,20 +52,20 @@ public class ControladorPerfil {
                 cerrarConexion(conexion);
             }
         }
-        return exist;
+        return perfil;
     }
-
+    
     public static boolean crearPerfil(Perfil p) {
         boolean exist = false;
         Connection conexion = abrirConexion();
-
+        
         if (conexion != null) {
             try {
                 try (Statement st = (Statement) conexion.createStatement()) {
                     sentencia = "INSERT INTO " + ConstantesBD.TABLAPERFIL + " (idUser, username, sexo, edad) "
-                                + "values('" + p.getIduser() + "','" + p.getUsername() + "','" + p.getSexo()
-                                + "'," + p.getEdad() + ")";
-
+                            + "values('" + p.getIduser() + "','" + p.getUsername() + "','" + p.getSexo()
+                            + "'," + p.getEdad() + ")";
+                    
                     if (st.executeUpdate(sentencia) == 1) {
                         exist = true;
                     }
@@ -75,7 +79,7 @@ public class ControladorPerfil {
         return exist;
     }
     
-    public synchronized static boolean delPerfil(String idUser){
+    public synchronized static boolean delPerfil(String idUser) {
         boolean exito = false;
         Connection conexion = abrirConexion();
         
@@ -89,6 +93,28 @@ public class ControladorPerfil {
                 }
             } catch (SQLException ex) {
                 ex.printStackTrace();
+            } finally {
+                cerrarConexion(conexion);
+            }
+        }
+        return exito;
+    }
+    
+    public static boolean updatePerfil(Perfil p) {
+        boolean exito = false;
+        Connection conexion = abrirConexion();
+
+        if (conexion != null) {
+            try {
+                try (Statement st = (Statement) conexion.createStatement()) {
+                    sentencia = "UPDATE " + ConstantesBD.TABLAPERFIL + " SET username = '" + p.getUsername() + "', sexo = '" + p.getSexo() + "', edad = " + p.getEdad()
+                            + " WHERE idUser = '" + p.getIduser() + "'";
+                    if (st.executeUpdate(sentencia) == 1) {
+                        exito = true;
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
             } finally {
                 cerrarConexion(conexion);
             }
